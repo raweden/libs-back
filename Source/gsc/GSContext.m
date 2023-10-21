@@ -5,7 +5,7 @@
 
    Written by:  Adam Fedor <fedor@boulder.colorado.edu>
    Date: Nov 1998
-   
+
    This file is part of the GNU Objective C User Interface Library.
 
    This library is free software; you can redistribute it and/or
@@ -20,8 +20,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -48,14 +48,14 @@
 
 #include "math.h"
 
-#define GSI_ARRAY_TYPES       GSUNION_OBJ
+#define GSI_ARRAY_TYPES GSUNION_OBJ
 
-#if     GS_WITH_GC == 0
-#define GSI_ARRAY_RELEASE(A, X)    [(X).obj release]
-#define GSI_ARRAY_RETAIN(A, X)     [(X).obj retain]
+#if GS_WITH_GC == 0
+#define GSI_ARRAY_RELEASE(A, X) [(X).obj release]
+#define GSI_ARRAY_RETAIN(A, X) [(X).obj retain]
 #else
 #define GSI_ARRAY_RELEASE(A, X)
-#define GSI_ARRAY_RETAIN(A, X)     (X).obj
+#define GSI_ARRAY_RETAIN(A, X) (X).obj
 #endif
 
 #ifdef GSIArray
@@ -64,68 +64,81 @@
 #include <GNUstepBase/GSIArray.h>
 
 /* Error macros */
-#define CHECK_NULL_OUTPUT(outvar) \
-  do { if (outvar == NULL) {\
-    DPS_ERROR(DPSnulloutput, @"NULL output variable specified"); \
-    return; } } while (0)
+#define CHECK_NULL_OUTPUT(outvar)                                                                                  \
+    do {                                                                                                           \
+        if (outvar == NULL) {                                                                                      \
+            DPS_ERROR(DPSnulloutput, @"NULL output variable specified");                                           \
+            return;                                                                                                \
+        }                                                                                                          \
+    } while (0)
 
-#define CHECK_INVALID_FONT(ident) \
-  do { if (ident >= [fontid count]) { \
-    DPS_ERROR(DPSinvalidfont, @"Cannot find indicated font"); \
-    return; } } while (0)
+#define CHECK_INVALID_FONT(ident)                                                                                  \
+    do {                                                                                                           \
+        if (ident >= [fontid count]) {                                                                             \
+            DPS_ERROR(DPSinvalidfont, @"Cannot find indicated font");                                              \
+            return;                                                                                                \
+        }                                                                                                          \
+    } while (0)
 
-#define CHECK_STACK_UNDERFLOW(stack) \
-  do { if (GSIArrayCount((GSIArray)stack) == 0) { \
-    DPS_ERROR(DPSstackunderflow, @"Attempt to pop from empty stack"); \
-    return; } } while (0)
+#define CHECK_STACK_UNDERFLOW(stack)                                                                               \
+    do {                                                                                                           \
+        if (GSIArrayCount((GSIArray)stack) == 0) {                                                                 \
+            DPS_ERROR(DPSstackunderflow, @"Attempt to pop from empty stack");                                      \
+            return;                                                                                                \
+        }                                                                                                          \
+    } while (0)
 
 #if 0
-#define CHECK_TYPECHECK(obj, kind) \
-  do { if ([kind class] != Nil && !GSObjCIsKindOf(GSObjCClass(obj), [kind class])) {\
-    DPS_ERROR(DPStypecheck, @"Invalid object"); \
-    return; } } while (0)
+#define CHECK_TYPECHECK(obj, kind)                                                                                 \
+    do {                                                                                                           \
+        if ([kind class] != Nil && !GSObjCIsKindOf(GSObjCClass(obj), [kind class])) {                              \
+            DPS_ERROR(DPStypecheck, @"Invalid object");                                                            \
+            return;                                                                                                \
+        }                                                                                                          \
+    } while (0)
 #else
-#define CHECK_TYPECHECK(obj,kind)
+#define CHECK_TYPECHECK(obj, kind)
 #endif
 
-#define ctxt_pop(object, stack, kind) \
-  do { \
-    CHECK_STACK_UNDERFLOW(stack); \
-    object = (GSIArrayLastItem((GSIArray)stack)).obj; \
-    CHECK_TYPECHECK(object, kind); \
-    AUTORELEASE(RETAIN(object)); \
-    GSIArrayRemoveLastItem((GSIArray)stack); \
-  } while (0)
+#define ctxt_pop(object, stack, kind)                                                                              \
+    do {                                                                                                           \
+        CHECK_STACK_UNDERFLOW(stack);                                                                              \
+        object = (GSIArrayLastItem((GSIArray)stack)).obj;                                                          \
+        CHECK_TYPECHECK(object, kind);                                                                             \
+        AUTORELEASE(RETAIN(object));                                                                               \
+        GSIArrayRemoveLastItem((GSIArray)stack);                                                                   \
+    } while (0)
 
-#define ctxt_push(object, stack) \
-  GSIArrayAddItem((GSIArray)stack, (GSIArrayItem)((id)object))
+#define ctxt_push(object, stack) GSIArrayAddItem((GSIArray)stack, (GSIArrayItem)((id)object))
 
 /* Globally unique gstate number */
 static unsigned int unique_index = 0;
 static NSMapTable *gtable;
 
-@interface GSContext (PrivateOps)
+@interface
+GSContext (PrivateOps)
 - (void)DPSdefineuserobject;
-- (void)DPSexecuserobject: (NSInteger)index;
-- (void)DPSundefineuserobject: (NSInteger)index;
+- (void)DPSexecuserobject:(NSInteger)index;
+- (void)DPSundefineuserobject:(NSInteger)index;
 - (void)DPSclear;
-- (void)DPScopy: (int)n;
-- (void)DPScount: (int *)n;
+- (void)DPScopy:(int)n;
+- (void)DPScount:(int *)n;
 - (void)DPSdup;
 - (void)DPSexch;
-- (void)DPSindex: (int)i;
+- (void)DPSindex:(int)i;
 - (void)DPSpop;
 @end
 
-@interface NSBitmapImageRep (GSPrivate)
-- (NSBitmapImageRep *) _convertToFormatBitsPerSample: (NSInteger)bps
-                                     samplesPerPixel: (NSInteger)spp
-                                            hasAlpha: (BOOL)alpha
-                                            isPlanar: (BOOL)isPlanar
-                                      colorSpaceName: (NSString*)colorSpaceName
-                                        bitmapFormat: (NSBitmapFormat)bitmapFormat 
-                                         bytesPerRow: (NSInteger)rowBytes
-                                        bitsPerPixel: (NSInteger)pixelBits;
+@interface
+NSBitmapImageRep (GSPrivate)
+- (NSBitmapImageRep *)_convertToFormatBitsPerSample:(NSInteger)bps
+                                    samplesPerPixel:(NSInteger)spp
+                                           hasAlpha:(BOOL)alpha
+                                           isPlanar:(BOOL)isPlanar
+                                     colorSpaceName:(NSString *)colorSpaceName
+                                       bitmapFormat:(NSBitmapFormat)bitmapFormat
+                                        bytesPerRow:(NSInteger)rowBytes
+                                       bitsPerPixel:(NSInteger)pixelBits;
 @end
 
 
@@ -143,105 +156,97 @@ static NSMapTable *gtable;
    functionality.
    </p>
    </unit> */
-@implementation GSContext 
+@implementation GSContext
 
-+ (void) initialize
++ (void)initialize
 {
-  if (self == [GSContext class])
-    {
-      gtable = NSCreateMapTable(NSIntMapKeyCallBacks,
-                                NSObjectMapValueCallBacks, 20);
+    if (self == [GSContext class]) {
+        gtable = NSCreateMapTable(NSIntMapKeyCallBacks, NSObjectMapValueCallBacks, 20);
     }
 }
 
-+ (void) insertObject: (id)obj forKey: (int)index
++ (void)insertObject:(id)obj forKey:(int)index
 {
-  NSMapInsert(gtable, (void *)(uintptr_t)index, obj);
+    NSMapInsert(gtable, (void *)(uintptr_t)index, obj);
 }
 
 
-+ (id) getObjectForKey: (int)index
++ (id)getObjectForKey:(int)index
 {
-  return NSMapGet(gtable, (void *)(uintptr_t)index);
+    return NSMapGet(gtable, (void *)(uintptr_t)index);
 }
 
-+ (void) removeObjectForKey: (int)index
++ (void)removeObjectForKey:(int)index
 {
-  NSMapRemove(gtable, (void *)(uintptr_t)index);
+    NSMapRemove(gtable, (void *)(uintptr_t)index);
 }
 
-+ (Class) GStateClass
++ (Class)GStateClass
 {
-  return [GSGState class];
+    return [GSGState class];
 }
 
-+ (BOOL) handlesPS
++ (BOOL)handlesPS
 {
-  return NO;
+    return NO;
 }
 
-- (id) initWithContextInfo: (NSDictionary *)info
+- (id)initWithContextInfo:(NSDictionary *)info
 {
-  NSString *contextType;
-  NSZone   *z = [self zone];
+    NSString *contextType;
+    NSZone *z = [self zone];
 
-  contextType = [info objectForKey: 
-		  NSGraphicsContextRepresentationFormatAttributeName];
-  if (([object_getClass(self) handlesPS] == NO) && contextType 
-      && [contextType isEqual: NSGraphicsContextPSFormat])
-    {
-      /* Don't call self, since we aren't initialized */
-      [super dealloc];
-      return [[GSStreamContext allocWithZone: z] initWithContextInfo: info];
+    contextType = [info objectForKey:NSGraphicsContextRepresentationFormatAttributeName];
+    if (([object_getClass(self) handlesPS] == NO) && contextType &&
+        [contextType isEqual:NSGraphicsContextPSFormat]) {
+        /* Don't call self, since we aren't initialized */
+        [super dealloc];
+        return [[GSStreamContext allocWithZone:z] initWithContextInfo:info];
     }
 
-  self = [super initWithContextInfo: info];
-  if (self != nil)
-    {
-      id dest;
+    self = [super initWithContextInfo:info];
+    if (self != nil) {
+        id dest;
 
-      /* Initialize lists and stacks */
-      opstack =  NSZoneMalloc(z, sizeof(GSIArray_t));
-      GSIArrayInitWithZoneAndCapacity((GSIArray)opstack, z, 2);
-      gstack =  NSZoneMalloc(z, sizeof(GSIArray_t));
-      GSIArrayInitWithZoneAndCapacity((GSIArray)gstack, z, 2);
-      /* Create a default gstate */
-      gstate = [[[object_getClass(self) GStateClass] allocWithZone: z] 
-                   initWithDrawContext: self];
+        /* Initialize lists and stacks */
+        opstack = NSZoneMalloc(z, sizeof(GSIArray_t));
+        GSIArrayInitWithZoneAndCapacity((GSIArray)opstack, z, 2);
+        gstack = NSZoneMalloc(z, sizeof(GSIArray_t));
+        GSIArrayInitWithZoneAndCapacity((GSIArray)gstack, z, 2);
+        /* Create a default gstate */
+        gstate = [[[object_getClass(self) GStateClass] allocWithZone:z] initWithDrawContext:self];
 
-      // Set some default values
-      [self setShouldAntialias: YES];
-      [self setImageInterpolation: NSImageInterpolationNone];
-      [self setPatternPhase: NSMakePoint(0.0, 0.0)];
-      [self setCompositingOperation: NSCompositeSourceOver];
+        // Set some default values
+        [self setShouldAntialias:YES];
+        [self setImageInterpolation:NSImageInterpolationNone];
+        [self setPatternPhase:NSMakePoint(0.0, 0.0)];
+        [self setCompositingOperation:NSCompositeSourceOver];
 
-      // Special handling for window drawing
-      dest = [info objectForKey: NSGraphicsContextDestinationAttributeName];
-      if ((dest != nil) && [dest isKindOfClass: [NSWindow class]])
-        {
-          /* A context is only associated with one server. Do not retain
-             the server, however */
-          server = GSCurrentServer();
-          [server setWindowdevice: [(NSWindow*)dest windowNumber] 
-                  forContext: self];
+        // Special handling for window drawing
+        dest = [info objectForKey:NSGraphicsContextDestinationAttributeName];
+        if ((dest != nil) && [dest isKindOfClass:[NSWindow class]]) {
+            /* A context is only associated with one server. Do not retain
+               the server, however */
+            server = GSCurrentServer();
+            [server setWindowdevice:[(NSWindow *)dest windowNumber] forContext:self];
         }
     }
 
-  return self;
+    return self;
 }
 
 /**
    Closes all backend resources and dealloc other ivars.
 */
-- (void) dealloc
+- (void)dealloc
 {
-  NSDebugLog(@"Destroying GS Context");
-  GSIArrayEmpty((GSIArray)opstack);
-  NSZoneFree([self zone], opstack);
-  GSIArrayEmpty((GSIArray)gstack);
-  NSZoneFree([self zone], gstack);
-  DESTROY(gstate);
-  [super dealloc];
+    NSDebugLog(@"Destroying GS Context");
+    GSIArrayEmpty((GSIArray)opstack);
+    NSZoneFree([self zone], opstack);
+    GSIArrayEmpty((GSIArray)gstack);
+    NSZoneFree([self zone], gstack);
+    DESTROY(gstate);
+    [super dealloc];
 }
 
 /**
@@ -249,763 +254,744 @@ static NSMapTable *gtable;
 */
 - (BOOL)isDrawingToScreen
 {
-  return YES;
+    return YES;
 }
 
 /**
    Returns the current GSGState object
 */
-- (GSGState *) currentGState
+- (GSGState *)currentGState
 {
-  return gstate;
+    return gstate;
 }
 
-- (void) setShouldAntialias: (BOOL)antialias
+- (void)setShouldAntialias:(BOOL)antialias
 {
-  [gstate setShouldAntialias: antialias];
+    [gstate setShouldAntialias:antialias];
 }
 
-- (BOOL) shouldAntialias
+- (BOOL)shouldAntialias
 {
-  return [gstate shouldAntialias];
+    return [gstate shouldAntialias];
 }
 
-- (NSPoint) patternPhase
+- (NSPoint)patternPhase
 {
-  return [gstate patternPhase];
+    return [gstate patternPhase];
 }
 
-- (void) setPatternPhase: (NSPoint)phase
+- (void)setPatternPhase:(NSPoint)phase
 {
-  [gstate setPatternPhase: phase];
+    [gstate setPatternPhase:phase];
 }
 
-- (NSCompositingOperation) compositingOperation
+- (NSCompositingOperation)compositingOperation
 {
-  return [gstate compositingOperation];
+    return [gstate compositingOperation];
 }
 
-- (void) setCompositingOperation: (NSCompositingOperation)operation
+- (void)setCompositingOperation:(NSCompositingOperation)operation
 {
-  [gstate setCompositingOperation: operation];
+    [gstate setCompositingOperation:operation];
 }
 
 @end
 
-@implementation GSContext (Ops)
+@implementation
+GSContext (Ops)
 
 /* ----------------------------------------------------------------------- */
 /* Color operations */
 /* ----------------------------------------------------------------------- */
-- (void) DPScurrentalpha: (CGFloat *)a
+- (void)DPScurrentalpha:(CGFloat *)a
 {
-  [gstate DPScurrentalpha: a];
+    [gstate DPScurrentalpha:a];
 }
 
-- (void) DPScurrentcmykcolor: (CGFloat*)c : (CGFloat*)m : (CGFloat*)y : (CGFloat*)k 
+- (void)DPScurrentcmykcolor:(CGFloat *)c:(CGFloat *)m:(CGFloat *)y:(CGFloat *)k
 {
-  [gstate DPScurrentcmykcolor:c :m :y :k];
+    [gstate DPScurrentcmykcolor:c:m:y:k];
 }
 
-- (void) DPScurrentgray: (CGFloat*)gray 
+- (void)DPScurrentgray:(CGFloat *)gray
 {
-  CHECK_NULL_OUTPUT(gray);
-  [gstate DPScurrentgray: gray];
+    CHECK_NULL_OUTPUT(gray);
+    [gstate DPScurrentgray:gray];
 }
 
-- (void) DPScurrenthsbcolor: (CGFloat*)h : (CGFloat*)s : (CGFloat*)b 
+- (void)DPScurrenthsbcolor:(CGFloat *)h:(CGFloat *)s:(CGFloat *)b
 {
-  CHECK_NULL_OUTPUT(h);
-  CHECK_NULL_OUTPUT(s);
-  CHECK_NULL_OUTPUT(b);
-  [gstate DPScurrenthsbcolor:h :s :b];
+    CHECK_NULL_OUTPUT(h);
+    CHECK_NULL_OUTPUT(s);
+    CHECK_NULL_OUTPUT(b);
+    [gstate DPScurrenthsbcolor:h:s:b];
 }
 
-- (void) DPScurrentrgbcolor: (CGFloat*)r : (CGFloat*)g : (CGFloat*)b 
+- (void)DPScurrentrgbcolor:(CGFloat *)r:(CGFloat *)g:(CGFloat *)b
 {
-  CHECK_NULL_OUTPUT(r);
-  CHECK_NULL_OUTPUT(g);
-  CHECK_NULL_OUTPUT(b);
-  [gstate DPScurrentrgbcolor:r :g :b];
+    CHECK_NULL_OUTPUT(r);
+    CHECK_NULL_OUTPUT(g);
+    CHECK_NULL_OUTPUT(b);
+    [gstate DPScurrentrgbcolor:r:g:b];
 }
 
-- (void) DPSsetalpha: (CGFloat)a
+- (void)DPSsetalpha:(CGFloat)a
 {
-  [gstate DPSsetalpha: a];
+    [gstate DPSsetalpha:a];
 }
 
-- (void) DPSsetcmykcolor: (CGFloat)c : (CGFloat)m : (CGFloat)y : (CGFloat)k 
+- (void)DPSsetcmykcolor:(CGFloat)c:(CGFloat)m:(CGFloat)y:(CGFloat)k
 {
-  [gstate DPSsetcmykcolor:c :m :y :k];
+    [gstate DPSsetcmykcolor:c:m:y:k];
 }
 
-- (void) DPSsetgray: (CGFloat)gray 
+- (void)DPSsetgray:(CGFloat)gray
 {
-  [gstate DPSsetgray: gray];
+    [gstate DPSsetgray:gray];
 }
 
-- (void) DPSsethsbcolor: (CGFloat)h : (CGFloat)s : (CGFloat)b 
+- (void)DPSsethsbcolor:(CGFloat)h:(CGFloat)s:(CGFloat)b
 {
-  [gstate DPSsethsbcolor:h :s :b];
+    [gstate DPSsethsbcolor:h:s:b];
 }
 
-- (void) DPSsetrgbcolor: (CGFloat)r : (CGFloat)g : (CGFloat)b 
+- (void)DPSsetrgbcolor:(CGFloat)r:(CGFloat)g:(CGFloat)b
 {
-  [gstate DPSsetrgbcolor:r :g :b];
+    [gstate DPSsetrgbcolor:r:g:b];
 }
 
-- (void) GSSetPatterColor: (NSImage*)image 
+- (void)GSSetPatterColor:(NSImage *)image
 {
-  [gstate GSSetPatterColor: image];
+    [gstate GSSetPatterColor:image];
 }
 
-- (void) GSSetFillColorspace: (void *)spaceref
+- (void)GSSetFillColorspace:(void *)spaceref
 {
-  [gstate GSSetFillColorspace: spaceref];
+    [gstate GSSetFillColorspace:spaceref];
 }
 
-- (void) GSSetStrokeColorspace: (void *)spaceref
+- (void)GSSetStrokeColorspace:(void *)spaceref
 {
-  [gstate GSSetStrokeColorspace: spaceref];
+    [gstate GSSetStrokeColorspace:spaceref];
 }
 
-- (void) GSSetFillColor: (const CGFloat *)values
+- (void)GSSetFillColor:(const CGFloat *)values
 {
-  [gstate GSSetFillColor: values];
+    [gstate GSSetFillColor:values];
 }
 
-- (void) GSSetStrokeColor: (const CGFloat *)values
+- (void)GSSetStrokeColor:(const CGFloat *)values
 {
-  [gstate GSSetStrokeColor: values];
+    [gstate GSSetStrokeColor:values];
 }
 
 /* ----------------------------------------------------------------------- */
 /* Text operations */
 /* ----------------------------------------------------------------------- */
-- (void) DPSashow: (CGFloat)x : (CGFloat)y : (const char *)s 
+- (void)DPSashow:(CGFloat)x:(CGFloat)y:(const char *)s
 {
-  [gstate DPSashow: x : y : s];
+    [gstate DPSashow:x:y:s];
 }
 
-- (void) DPSawidthshow: (CGFloat)cx : (CGFloat)cy : (int)c : (CGFloat)ax : (CGFloat)ay : (const char *)s 
+- (void)DPSawidthshow:(CGFloat)cx:(CGFloat)cy:(int)c:(CGFloat)ax:(CGFloat)ay:(const char *)s
 {
-  [gstate DPSawidthshow: cx : cy : c : ax : ay : s];
+    [gstate DPSawidthshow:cx:cy:c:ax:ay:s];
 }
 
-- (void) DPScharpath: (const char *)s : (int)b 
+- (void)DPScharpath:(const char *)s:(int)b
 {
-  [gstate DPScharpath: s : b];
+    [gstate DPScharpath:s:b];
 }
 
-- (void) appendBezierPathWithPackedGlyphs: (const char *)packedGlyphs
-                                     path: (NSBezierPath*)aPath
+- (void)appendBezierPathWithPackedGlyphs:(const char *)packedGlyphs path:(NSBezierPath *)aPath
 {
-  [gstate appendBezierPathWithPackedGlyphs: packedGlyphs path: aPath];
+    [gstate appendBezierPathWithPackedGlyphs:packedGlyphs path:aPath];
 }
 
-- (void) DPSshow: (const char *)s 
+- (void)DPSshow:(const char *)s
 {
-  [gstate DPSshow: s];
+    [gstate DPSshow:s];
 }
 
-- (void) DPSwidthshow: (CGFloat)x : (CGFloat)y : (int)c : (const char *)s 
+- (void)DPSwidthshow:(CGFloat)x:(CGFloat)y:(int)c:(const char *)s
 {
-  [gstate DPSwidthshow: x : y : c : s];
+    [gstate DPSwidthshow:x:y:c:s];
 }
 
-- (void) DPSxshow: (const char *)s : (const CGFloat*)numarray : (int)size 
+- (void)DPSxshow:(const char *)s:(const CGFloat *)numarray:(int)size
 {
-  [gstate DPSxshow: s : numarray : size];
+    [gstate DPSxshow:s:numarray:size];
 }
 
-- (void) DPSxyshow: (const char *)s : (const CGFloat*)numarray : (int)size 
+- (void)DPSxyshow:(const char *)s:(const CGFloat *)numarray:(int)size
 {
-  [gstate DPSxyshow: s : numarray : size];
+    [gstate DPSxyshow:s:numarray:size];
 }
 
-- (void) DPSyshow: (const char *)s : (const CGFloat*)numarray : (int)size 
+- (void)DPSyshow:(const char *)s:(const CGFloat *)numarray:(int)size
 {
-  [gstate DPSyshow: s : numarray : size];
+    [gstate DPSyshow:s:numarray:size];
 }
 
-- (void) GSSetCharacterSpacing: (CGFloat)extra
+- (void)GSSetCharacterSpacing:(CGFloat)extra
 {
-  [gstate GSSetCharacterSpacing: extra];
+    [gstate GSSetCharacterSpacing:extra];
 }
 
-- (void) GSSetFont: (void *)fontref
+- (void)GSSetFont:(void *)fontref
 {
-  [gstate GSSetFont: fontref];
+    [gstate GSSetFont:fontref];
 }
 
-- (void) GSSetFontSize: (CGFloat)size
+- (void)GSSetFontSize:(CGFloat)size
 {
-  [gstate GSSetFontSize: size];
+    [gstate GSSetFontSize:size];
 }
 
-- (NSAffineTransform *) GSGetTextCTM
+- (NSAffineTransform *)GSGetTextCTM
 {
-  return [gstate GSGetTextCTM];
+    return [gstate GSGetTextCTM];
 }
 
-- (NSPoint) GSGetTextPosition
+- (NSPoint)GSGetTextPosition
 {
-  return [gstate GSGetTextPosition];
+    return [gstate GSGetTextPosition];
 }
 
-- (void) GSSetTextCTM: (NSAffineTransform *)ctm
+- (void)GSSetTextCTM:(NSAffineTransform *)ctm
 {
-  [gstate GSSetTextCTM: ctm];
+    [gstate GSSetTextCTM:ctm];
 }
 
-- (void) GSSetTextDrawingMode: (GSTextDrawingMode)mode
+- (void)GSSetTextDrawingMode:(GSTextDrawingMode)mode
 {
-  [gstate GSSetTextDrawingMode: mode];
+    [gstate GSSetTextDrawingMode:mode];
 }
 
-- (void) GSSetTextPosition: (NSPoint)loc
+- (void)GSSetTextPosition:(NSPoint)loc
 {
-  [gstate GSSetTextPosition: loc];
+    [gstate GSSetTextPosition:loc];
 }
 
-- (void) GSShowText: (const char *)string : (size_t) length
+- (void)GSShowText:(const char *)string:(size_t)length
 {
-  [gstate GSShowText: string : length];
+    [gstate GSShowText:string:length];
 }
 
-- (void) GSShowGlyphs: (const NSGlyph *)glyphs : (size_t) length
+- (void)GSShowGlyphs:(const NSGlyph *)glyphs:(size_t)length
 {
-  [gstate GSShowGlyphs: glyphs : length];
+    [gstate GSShowGlyphs:glyphs:length];
 }
 
-- (void) GSShowGlyphsWithAdvances: (const NSGlyph *)glyphs : (const NSSize *)advances : (size_t) length
+- (void)GSShowGlyphsWithAdvances:(const NSGlyph *)glyphs:(const NSSize *)advances:(size_t)length
 {
-  [gstate GSShowGlyphsWithAdvances: glyphs : advances : length];
+    [gstate GSShowGlyphsWithAdvances:glyphs:advances:length];
 }
 
 /* ----------------------------------------------------------------------- */
 /* Gstate Handling */
 /* ----------------------------------------------------------------------- */
 
-- (void) DPSgrestore
+- (void)DPSgrestore
 {
-  if (GSIArrayCount((GSIArray)gstack) == 0)
-    return;
-  RELEASE(gstate);
-  gstate = (GSIArrayLastItem((GSIArray)gstack)).obj;
-  ctxt_pop(gstate, gstack, GSGState);
-  RETAIN(gstate);
+    if (GSIArrayCount((GSIArray)gstack) == 0)
+        return;
+    RELEASE(gstate);
+    gstate = (GSIArrayLastItem((GSIArray)gstack)).obj;
+    ctxt_pop(gstate, gstack, GSGState);
+    RETAIN(gstate);
 }
 
-- (void) DPSgsave
+- (void)DPSgsave
 {
-  ctxt_push(gstate, gstack);
-  AUTORELEASE(gstate);
-  gstate = [gstate copy];
+    ctxt_push(gstate, gstack);
+    AUTORELEASE(gstate);
+    gstate = [gstate copy];
 }
 
-- (void) DPSinitgraphics
+- (void)DPSinitgraphics
 {
-  [gstate DPSinitgraphics];
+    [gstate DPSinitgraphics];
 }
 
-- (void) DPSsetgstate: (NSInteger)gst
+- (void)DPSsetgstate:(NSInteger)gst
 {
-  if (gst)
-    {
-      [self DPSexecuserobject: gst];
-      RELEASE(gstate);
-      ctxt_pop(gstate, opstack, GSGState);
-      gstate = [gstate copy];
+    if (gst) {
+        [self DPSexecuserobject:gst];
+        RELEASE(gstate);
+        ctxt_pop(gstate, opstack, GSGState);
+        gstate = [gstate copy];
+    } else
+        DESTROY(gstate);
+}
+
+- (NSInteger)GSDefineGState
+{
+    if (gstate == nil) {
+        DPS_ERROR(DPSundefined, @"No gstate");
+        return 0;
     }
-  else
-    DESTROY(gstate);
+    [object_getClass(self) insertObject:AUTORELEASE([gstate copy]) forKey:++unique_index];
+
+    return unique_index;
 }
 
-- (NSInteger) GSDefineGState
+- (void)GSUndefineGState:(NSInteger)gst
 {
-  if (gstate == nil)
-    {
-      DPS_ERROR(DPSundefined, @"No gstate");
-      return 0;
-    }
-  [object_getClass(self) insertObject: AUTORELEASE([gstate copy]) forKey: ++unique_index];
-
-  return unique_index;
+    [self DPSundefineuserobject:gst];
 }
 
-- (void) GSUndefineGState: (NSInteger)gst
+- (void)GSReplaceGState:(NSInteger)gst
 {
-  [self DPSundefineuserobject: gst];
-}
+    if (gst <= 0)
+        return;
 
-- (void) GSReplaceGState: (NSInteger)gst
-{
-  if (gst <= 0)
-    return;
-
-  [object_getClass(self) insertObject: AUTORELEASE([gstate copy]) forKey: gst];
+    [object_getClass(self) insertObject:AUTORELEASE([gstate copy]) forKey:gst];
 }
 
 /* ----------------------------------------------------------------------- */
 /* Gstate operations */
 /* ----------------------------------------------------------------------- */
-- (void) DPScurrentflat: (CGFloat*)flatness
+- (void)DPScurrentflat:(CGFloat *)flatness
 {
-  CHECK_NULL_OUTPUT(flatness);
-  [gstate DPScurrentflat: flatness];
+    CHECK_NULL_OUTPUT(flatness);
+    [gstate DPScurrentflat:flatness];
 }
 
-- (void) DPScurrentlinecap: (int*)linecap
+- (void)DPScurrentlinecap:(int *)linecap
 {
-  [gstate DPScurrentlinecap: linecap];
+    [gstate DPScurrentlinecap:linecap];
 }
 
-- (void) DPScurrentlinejoin: (int*)linejoin
+- (void)DPScurrentlinejoin:(int *)linejoin
 {
-  [gstate DPScurrentlinejoin: linejoin];
+    [gstate DPScurrentlinejoin:linejoin];
 }
 
-- (void) DPScurrentlinewidth: (CGFloat*)width
+- (void)DPScurrentlinewidth:(CGFloat *)width
 {
-  [gstate DPScurrentlinewidth: width];
+    [gstate DPScurrentlinewidth:width];
 }
 
-- (void) DPScurrentmiterlimit: (CGFloat*)limit
+- (void)DPScurrentmiterlimit:(CGFloat *)limit
 {
-  CHECK_NULL_OUTPUT(limit);
-  [gstate DPScurrentmiterlimit: limit];
+    CHECK_NULL_OUTPUT(limit);
+    [gstate DPScurrentmiterlimit:limit];
 }
 
-- (void) DPScurrentpoint: (CGFloat*)x : (CGFloat*)y
+- (void)DPScurrentpoint:(CGFloat *)x:(CGFloat *)y
 {
-  CHECK_NULL_OUTPUT(x);
-  CHECK_NULL_OUTPUT(y);
-  [gstate DPScurrentpoint:x :y];
+    CHECK_NULL_OUTPUT(x);
+    CHECK_NULL_OUTPUT(y);
+    [gstate DPScurrentpoint:x:y];
 }
 
-- (void) DPScurrentstrokeadjust: (int*)b
+- (void)DPScurrentstrokeadjust:(int *)b
 {
-  CHECK_NULL_OUTPUT(b);
-  [gstate DPScurrentstrokeadjust: b];
+    CHECK_NULL_OUTPUT(b);
+    [gstate DPScurrentstrokeadjust:b];
 }
 
-- (void) DPSsetdash: (const CGFloat*)pat : (NSInteger)size : (CGFloat)offset
+- (void)DPSsetdash:(const CGFloat *)pat:(NSInteger)size:(CGFloat)offset
 {
-  [gstate DPSsetdash: pat : size : offset]; 
+    [gstate DPSsetdash:pat:size:offset];
 }
 
-- (void) DPSsetflat: (CGFloat)flatness
+- (void)DPSsetflat:(CGFloat)flatness
 {
-  [gstate DPSsetflat: flatness];
+    [gstate DPSsetflat:flatness];
 }
 
-- (void) DPSsethalftonephase: (CGFloat)x : (CGFloat)y
+- (void)DPSsethalftonephase:(CGFloat)x:(CGFloat)y
 {
-  [self notImplemented: _cmd];
+    [self notImplemented:_cmd];
 }
 
-- (void) DPSsetlinecap: (int)linecap
+- (void)DPSsetlinecap:(int)linecap
 {
-  [gstate DPSsetlinecap: linecap];
+    [gstate DPSsetlinecap:linecap];
 }
 
-- (void) DPSsetlinejoin: (int)linejoin
+- (void)DPSsetlinejoin:(int)linejoin
 {
-  [gstate DPSsetlinejoin: linejoin];
+    [gstate DPSsetlinejoin:linejoin];
 }
 
-- (void) DPSsetlinewidth: (CGFloat)width
+- (void)DPSsetlinewidth:(CGFloat)width
 {
-  [gstate DPSsetlinewidth: width];
+    [gstate DPSsetlinewidth:width];
 }
 
-- (void) DPSsetmiterlimit: (CGFloat)limit
+- (void)DPSsetmiterlimit:(CGFloat)limit
 {
-  [gstate DPSsetmiterlimit: limit];
+    [gstate DPSsetmiterlimit:limit];
 }
 
-- (void) DPSsetstrokeadjust: (int)b
+- (void)DPSsetstrokeadjust:(int)b
 {
-  [gstate DPSsetstrokeadjust: b];
+    [gstate DPSsetstrokeadjust:b];
 }
 
 /* ----------------------------------------------------------------------- */
 /* Matrix operations */
 /* ----------------------------------------------------------------------- */
-- (void) DPSconcat: (const CGFloat*)m
+- (void)DPSconcat:(const CGFloat *)m
 {
-  [gstate DPSconcat: m];
+    [gstate DPSconcat:m];
 }
 
-- (void) DPSinitmatrix
+- (void)DPSinitmatrix
 {
-  [gstate DPSinitmatrix];
+    [gstate DPSinitmatrix];
 }
 
-- (void) DPSrotate: (CGFloat)angle
+- (void)DPSrotate:(CGFloat)angle
 {
-  [gstate DPSrotate: angle];
+    [gstate DPSrotate:angle];
 }
 
-- (void) DPSscale: (CGFloat)x : (CGFloat)y
+- (void)DPSscale:(CGFloat)x:(CGFloat)y
 {
-  [gstate DPSscale:x :y];
+    [gstate DPSscale:x:y];
 }
 
-- (void) DPStranslate: (CGFloat)x : (CGFloat)y
+- (void)DPStranslate:(CGFloat)x:(CGFloat)y
 {
-  [gstate DPStranslate:x :y];
+    [gstate DPStranslate:x:y];
 }
 
-- (NSAffineTransform *) GSCurrentCTM
+- (NSAffineTransform *)GSCurrentCTM
 {
-  return [gstate GSCurrentCTM];
+    return [gstate GSCurrentCTM];
 }
 
-- (void) GSSetCTM: (NSAffineTransform *)ctm
+- (void)GSSetCTM:(NSAffineTransform *)ctm
 {
-  [gstate GSSetCTM: ctm];
+    [gstate GSSetCTM:ctm];
 }
 
-- (void) GSConcatCTM: (NSAffineTransform *)ctm
+- (void)GSConcatCTM:(NSAffineTransform *)ctm
 {
-  [gstate GSConcatCTM: ctm];
+    [gstate GSConcatCTM:ctm];
 }
 
 /* ----------------------------------------------------------------------- */
 /* Paint operations */
 /* ----------------------------------------------------------------------- */
-- (void) DPSarc: (CGFloat)x : (CGFloat)y : (CGFloat)r : (CGFloat)angle1 
-	       : (CGFloat)angle2
+- (void)DPSarc:(CGFloat)x:(CGFloat)y:(CGFloat)r:(CGFloat)angle1:(CGFloat)angle2
 {
-  [gstate DPSarc: x : y : r : angle1 : angle2];
+    [gstate DPSarc:x:y:r:angle1:angle2];
 }
 
-- (void) DPSarcn: (CGFloat)x : (CGFloat)y : (CGFloat)r : (CGFloat)angle1 
-		: (CGFloat)angle2
+- (void)DPSarcn:(CGFloat)x:(CGFloat)y:(CGFloat)r:(CGFloat)angle1:(CGFloat)angle2
 {
-  [gstate DPSarcn: x : y : r : angle1 : angle2];
+    [gstate DPSarcn:x:y:r:angle1:angle2];
 }
 
-- (void) DPSarct: (CGFloat)x1 : (CGFloat)y1 : (CGFloat)x2 : (CGFloat)y2 : (CGFloat)r;
+- (void)DPSarct:(CGFloat)x1:(CGFloat)y1:(CGFloat)x2:(CGFloat)y2:(CGFloat)r;
 {
-  [gstate DPSarct: x1 : y1 : x2 : y2 : r];
+    [gstate DPSarct:x1:y1:x2:y2:r];
 }
 
-- (void) DPSclip
+- (void)DPSclip
 {
-  [gstate DPSclip];
+    [gstate DPSclip];
 }
 
-- (void) DPSclosepath
+- (void)DPSclosepath
 {
-  [gstate DPSclosepath];
+    [gstate DPSclosepath];
 }
 
-- (void) DPScurveto: (CGFloat)x1 : (CGFloat)y1 : (CGFloat)x2 : (CGFloat)y2 
-		   : (CGFloat)x3 : (CGFloat)y3
+- (void)DPScurveto:(CGFloat)x1:(CGFloat)y1:(CGFloat)x2:(CGFloat)y2:(CGFloat)x3:(CGFloat)y3
 {
-  [gstate DPScurveto: x1 : y1 : x2 : y2 : x3 : y3];
+    [gstate DPScurveto:x1:y1:x2:y2:x3:y3];
 }
 
-- (void) DPSeoclip
+- (void)DPSeoclip
 {
-  [gstate DPSeoclip];
+    [gstate DPSeoclip];
 }
 
-- (void) DPSeofill
+- (void)DPSeofill
 {
-  [gstate DPSeofill];
+    [gstate DPSeofill];
 }
 
-- (void) DPSfill
+- (void)DPSfill
 {
-  [gstate DPSfill];
+    [gstate DPSfill];
 }
 
-- (void) DPSflattenpath
+- (void)DPSflattenpath
 {
-  [gstate DPSflattenpath];
+    [gstate DPSflattenpath];
 }
 
-- (void) DPSinitclip
+- (void)DPSinitclip
 {
-  [gstate DPSinitclip];
+    [gstate DPSinitclip];
 }
 
-- (void) DPSlineto: (CGFloat)x : (CGFloat)y
+- (void)DPSlineto:(CGFloat)x:(CGFloat)y
 {
-  [gstate DPSlineto: x : y];
+    [gstate DPSlineto:x:y];
 }
 
-- (void) DPSmoveto: (CGFloat)x : (CGFloat)y
+- (void)DPSmoveto:(CGFloat)x:(CGFloat)y
 {
-  [gstate DPSmoveto: x : y];
+    [gstate DPSmoveto:x:y];
 }
 
-- (void) DPSnewpath
+- (void)DPSnewpath
 {
-  [gstate DPSnewpath];
+    [gstate DPSnewpath];
 }
 
-- (void) DPSpathbbox: (CGFloat*)llx : (CGFloat*)lly : (CGFloat*)urx : (CGFloat*)ury
+- (void)DPSpathbbox:(CGFloat *)llx:(CGFloat *)lly:(CGFloat *)urx:(CGFloat *)ury
 {
-  [gstate DPSpathbbox: llx : lly : urx : ury];
+    [gstate DPSpathbbox:llx:lly:urx:ury];
 }
 
-- (void) DPSrcurveto: (CGFloat)x1 : (CGFloat)y1 : (CGFloat)x2 : (CGFloat)y2 
-		    : (CGFloat)x3 : (CGFloat)y3
+- (void)DPSrcurveto:(CGFloat)x1:(CGFloat)y1:(CGFloat)x2:(CGFloat)y2:(CGFloat)x3:(CGFloat)y3
 {
-  [gstate DPSrcurveto: x1 : y1 : x2 : y2 : x3 : y3];
+    [gstate DPSrcurveto:x1:y1:x2:y2:x3:y3];
 }
 
-- (void) DPSrectclip: (CGFloat)x : (CGFloat)y : (CGFloat)w : (CGFloat)h
+- (void)DPSrectclip:(CGFloat)x:(CGFloat)y:(CGFloat)w:(CGFloat)h
 {
-  [gstate DPSrectclip: x : y : w : h];
+    [gstate DPSrectclip:x:y:w:h];
 }
 
-- (void) DPSrectfill: (CGFloat)x : (CGFloat)y : (CGFloat)w : (CGFloat)h
+- (void)DPSrectfill:(CGFloat)x:(CGFloat)y:(CGFloat)w:(CGFloat)h
 {
-  [gstate DPSrectfill:x :y :w :h];
+    [gstate DPSrectfill:x:y:w:h];
 }
 
-- (void) DPSrectstroke: (CGFloat)x : (CGFloat)y : (CGFloat)w : (CGFloat)h
+- (void)DPSrectstroke:(CGFloat)x:(CGFloat)y:(CGFloat)w:(CGFloat)h
 {
-  [gstate DPSrectstroke:x :y :w :h];
+    [gstate DPSrectstroke:x:y:w:h];
 }
 
-- (void) DPSreversepath
+- (void)DPSreversepath
 {
-  [gstate DPSreversepath];
+    [gstate DPSreversepath];
 }
 
-- (void) DPSrlineto: (CGFloat)x : (CGFloat)y
+- (void)DPSrlineto:(CGFloat)x:(CGFloat)y
 {
-  [gstate DPSrlineto: x : y];
+    [gstate DPSrlineto:x:y];
 }
 
-- (void) DPSrmoveto: (CGFloat)x : (CGFloat)y
+- (void)DPSrmoveto:(CGFloat)x:(CGFloat)y
 {
-  [gstate DPSrmoveto: x : y];
+    [gstate DPSrmoveto:x:y];
 }
 
-- (void) DPSstroke
+- (void)DPSstroke
 {
-  [gstate DPSstroke];
+    [gstate DPSstroke];
 }
 
-- (void) GSSendBezierPath: (NSBezierPath *)path
+- (void)GSSendBezierPath:(NSBezierPath *)path
 {
-  [gstate GSSendBezierPath: path];
+    [gstate GSSendBezierPath:path];
 }
 
-- (void) GSRectClipList: (const NSRect *)rects : (int) count
+- (void)GSRectClipList:(const NSRect *)rects:(int)count
 {
-  [gstate GSRectClipList: rects : count];
+    [gstate GSRectClipList:rects:count];
 }
 
-- (void) GSRectFillList: (const NSRect *)rects : (int) count
+- (void)GSRectFillList:(const NSRect *)rects:(int)count
 {
-  [gstate GSRectFillList: rects : count];
+    [gstate GSRectFillList:rects:count];
 }
 
 /* ----------------------------------------------------------------------- */
 /* Window system ops */
 /* ----------------------------------------------------------------------- */
-- (void) DPScurrentoffset: (int *)x : (int *)y
+- (void)DPScurrentoffset:(int *)x:(int *)y
 {
-  if (x && y)
-    {
-      NSPoint offset = [gstate offset];
-      *x = offset.x;
-      *y = offset.y;
+    if (x && y) {
+        NSPoint offset = [gstate offset];
+        *x = offset.x;
+        *y = offset.y;
     }
 }
 
-- (void) DPSsetoffset: (short int)x : (short int)y
+- (void)DPSsetoffset:(short int)x:(short int)y
 {
-  [gstate setOffset: NSMakePoint(x,y)];
+    [gstate setOffset:NSMakePoint(x, y)];
 }
 
 /*-------------------------------------------------------------------------*/
 /* Graphics Extension Ops */
 /*-------------------------------------------------------------------------*/
-- (void) DPScomposite: (CGFloat)x : (CGFloat)y : (CGFloat)w : (CGFloat)h 
-		     : (NSInteger)gstateNum : (CGFloat)dx : (CGFloat)dy : (NSCompositingOperation)op
+- (void)DPScomposite:(CGFloat)
+                   x:(CGFloat)y
+                    :(CGFloat)w
+                    :(CGFloat)h
+                    :(NSInteger)gstateNum
+                    :(CGFloat)dx
+                    :(CGFloat)dy
+                    :(NSCompositingOperation)op
 {
-  [self GScomposite: gstateNum
-        toPoint: NSMakePoint(dx, dy)
-        fromRect: NSMakeRect(x, y, w, h)
-        operation: op
-        fraction: 1.0];
+    [self GScomposite:gstateNum toPoint:NSMakePoint(dx, dy) fromRect:NSMakeRect(x, y, w, h) operation:op
+             fraction:1.0];
 }
 
-- (void) DPScompositerect: (CGFloat)x : (CGFloat)y : (CGFloat)w : (CGFloat)h : (NSCompositingOperation)op
+- (void)DPScompositerect:(CGFloat)x:(CGFloat)y:(CGFloat)w:(CGFloat)h:(NSCompositingOperation)op
 {
-  [gstate compositerect: NSMakeRect(x, y, w, h) op: op];
+    [gstate compositerect:NSMakeRect(x, y, w, h) op:op];
 }
 
-- (void) DPSdissolve: (CGFloat)x : (CGFloat)y : (CGFloat)w : (CGFloat)h 
-		    : (NSInteger)gstateNum : (CGFloat)dx : (CGFloat)dy : (CGFloat)delta
+- (void)DPSdissolve:(CGFloat)
+                  x:(CGFloat)y
+                   :(CGFloat)w
+                   :(CGFloat)h
+                   :(NSInteger)gstateNum
+                   :(CGFloat)dx
+                   :(CGFloat)dy
+                   :(CGFloat)delta
 {
-  [self GScomposite: gstateNum
-        toPoint: NSMakePoint(dx, dy)
-        fromRect: NSMakeRect(x, y, w, h)
-        operation: NSCompositeSourceOver
-        fraction: delta];
+    [self GScomposite:gstateNum toPoint:NSMakePoint(dx, dy) fromRect:NSMakeRect(x, y, w, h)
+            operation:NSCompositeSourceOver
+             fraction:delta];
 }
 
-- (void) GScomposite: (NSInteger)gstateNum
-	     toPoint: (NSPoint)aPoint
-	    fromRect: (NSRect)srcRect
-	   operation: (NSCompositingOperation)op
-	    fraction: (CGFloat)delta
+- (void)GScomposite:(NSInteger)gstateNum
+            toPoint:(NSPoint)aPoint
+           fromRect:(NSRect)srcRect
+          operation:(NSCompositingOperation)op
+           fraction:(CGFloat)delta
 {
-  GSGState *g = gstate;
+    GSGState *g = gstate;
 
-  if (gstateNum)
-    {
-      [self DPSexecuserobject: gstateNum];
-      ctxt_pop(g, opstack, GSGState);
+    if (gstateNum) {
+        [self DPSexecuserobject:gstateNum];
+        ctxt_pop(g, opstack, GSGState);
     }
 
-  [gstate compositeGState: g
-	         fromRect: srcRect
-                  toPoint: aPoint
-                       op: op
-                 fraction: delta];
+    [gstate compositeGState:g fromRect:srcRect toPoint:aPoint op:op fraction:delta];
 }
 
-- (void) GSdraw: (NSInteger)gstateNum
-	toPoint: (NSPoint)aPoint
-       fromRect: (NSRect)srcRect
-      operation: (NSCompositingOperation)op
-       fraction: (CGFloat)delta
+- (void)GSdraw:(NSInteger)gstateNum
+       toPoint:(NSPoint)aPoint
+      fromRect:(NSRect)srcRect
+     operation:(NSCompositingOperation)op
+      fraction:(CGFloat)delta
 {
-  GSGState *g = gstate;
+    GSGState *g = gstate;
 
-  if (gstateNum)
-    {
-      [self DPSexecuserobject: gstateNum];
-      ctxt_pop(g, opstack, GSGState);
+    if (gstateNum) {
+        [self DPSexecuserobject:gstateNum];
+        ctxt_pop(g, opstack, GSGState);
     }
 
-  [gstate drawGState: g
-	    fromRect: srcRect
-             toPoint: aPoint
-                  op: op
-            fraction: delta];
+    [gstate drawGState:g fromRect:srcRect toPoint:aPoint op:op fraction:delta];
 }
 
-- (BOOL) isCompatibleBitmap: (NSBitmapImageRep*)bitmap
+- (BOOL)isCompatibleBitmap:(NSBitmapImageRep *)bitmap
 {
-  return ([bitmap bitmapFormat] == 0);
+    return ([bitmap bitmapFormat] == 0);
 }
 
-- (void) GSDrawImage: (NSRect) rect : (void *) imageref
+- (void)GSDrawImage:(NSRect)rect:(void *)imageref
 {
-  NSBitmapImageRep *bitmap;
-  unsigned char *data[5];
+    NSBitmapImageRep *bitmap;
+    unsigned char *data[5];
 
-  bitmap = (NSBitmapImageRep*)imageref;
-  if (![self isCompatibleBitmap: bitmap])
-    {
-      NSInteger bitsPerSample = 8;
-      BOOL isPlanar = NO;
-      NSInteger samplesPerPixel = [bitmap hasAlpha] ? 4 : 3;
-      NSString *colorSpaceName = NSCalibratedRGBColorSpace;
-      NSBitmapImageRep *new;
+    bitmap = (NSBitmapImageRep *)imageref;
+    if (![self isCompatibleBitmap:bitmap]) {
+        NSInteger bitsPerSample = 8;
+        BOOL isPlanar = NO;
+        NSInteger samplesPerPixel = [bitmap hasAlpha] ? 4 : 3;
+        NSString *colorSpaceName = NSCalibratedRGBColorSpace;
+        NSBitmapImageRep *new;
 
-     new = [bitmap _convertToFormatBitsPerSample: bitsPerSample
-                    samplesPerPixel: samplesPerPixel
-                    hasAlpha: [bitmap hasAlpha]
-                    isPlanar: isPlanar
-                    colorSpaceName: colorSpaceName
-                    bitmapFormat: 0
-                    bytesPerRow: 0
-                    bitsPerPixel: 0];
-            
-      if (new == nil)
-        {
-          NSLog(@"Could not convert bitmap data");
-          return;
+        new = [bitmap _convertToFormatBitsPerSample : bitsPerSample samplesPerPixel : samplesPerPixel hasAlpha :
+               [bitmap hasAlpha] isPlanar : isPlanar colorSpaceName : colorSpaceName
+                   bitmapFormat : 0 bytesPerRow : 0 bitsPerPixel : 0];
+
+        if (new == nil) {
+            NSLog(@"Could not convert bitmap data");
+            return;
         }
-      bitmap = new;
+        bitmap = new;
     }
 
-  [bitmap getBitmapDataPlanes: data];
-  [self NSDrawBitmap: rect : [bitmap pixelsWide] : [bitmap pixelsHigh]
-        : [bitmap bitsPerSample] : [bitmap samplesPerPixel]
-        : [bitmap bitsPerPixel] : [bitmap bytesPerRow] : [bitmap isPlanar]
-        : [bitmap hasAlpha] :  [bitmap colorSpaceName]
-        : (const unsigned char**)data];
+    [bitmap getBitmapDataPlanes:data];
+    [self NSDrawBitmap:rect:[bitmap pixelsWide]:[bitmap pixelsHigh]:[bitmap bitsPerSample]:[bitmap samplesPerPixel
+    ]:[bitmap bitsPerPixel]:[bitmap bytesPerRow]:[bitmap isPlanar]:[bitmap hasAlpha]:[bitmap colorSpaceName
+    ]:(const unsigned char **)data];
 }
 
 /* ----------------------------------------------------------------------- */
 /* Client functions */
 /* ----------------------------------------------------------------------- */
-- (void) DPSPrintf: (const char *)fmt : (va_list)args
+- (void)DPSPrintf:(const char *)fmt:(va_list)args
 {
-  /* Do nothing. We can't parse PostScript */
+    /* Do nothing. We can't parse PostScript */
 }
 
-- (void) DPSWriteData: (const char *)buf : (unsigned int)count
+- (void)DPSWriteData:(const char *)buf:(unsigned int)count
 {
-  /* Do nothing. We can't parse PostScript */
+    /* Do nothing. We can't parse PostScript */
 }
 
 @end
 
 /* ----------------------------------------------------------------------- */
-/* NSGraphics Ops */	
+/* NSGraphics Ops */
 /* ----------------------------------------------------------------------- */
-@implementation GSContext (NSGraphics)
+@implementation
+GSContext (NSGraphics)
 
-- (NSDictionary *) GSReadRect: (NSRect)rect
+- (NSDictionary *)GSReadRect:(NSRect)rect
 {
-  return [gstate GSReadRect: rect];
+    return [gstate GSReadRect:rect];
 }
 
 /*
  * Render Bitmap Images
  */
-- (void) NSDrawBitmap: (NSRect) rect : (NSInteger) pixelsWide : (NSInteger) pixelsHigh
-		     : (NSInteger) bitsPerSample : (NSInteger) samplesPerPixel 
-		     : (NSInteger) bitsPerPixel : (NSInteger) bytesPerRow : (BOOL) isPlanar
-		     : (BOOL) hasAlpha : (NSString *) colorSpaceName
-		     : (const unsigned char *const [5]) data
+- (void)NSDrawBitmap:(NSRect)
+                rect:(NSInteger)pixelsWide
+                    :(NSInteger)pixelsHigh
+                    :(NSInteger)bitsPerSample
+                    :(NSInteger)samplesPerPixel
+                    :(NSInteger)bitsPerPixel
+                    :(NSInteger)bytesPerRow
+                    :(BOOL)isPlanar
+                    :(BOOL)hasAlpha
+                    :(NSString *)colorSpaceName
+                    :(const unsigned char *const[5])data
 {
-  NSAffineTransform *trans;
-  NSSize scale;
+    NSAffineTransform *trans;
+    NSSize scale;
 
-  // Compute the transformation matrix
-  scale = NSMakeSize(NSWidth(rect) / pixelsWide, 
-		     NSHeight(rect) / pixelsHigh);
-  trans = [NSAffineTransform transform];
-  [trans translateToPoint: rect.origin];
-  [trans scaleXBy: scale.width  yBy: scale.height];
+    // Compute the transformation matrix
+    scale = NSMakeSize(NSWidth(rect) / pixelsWide, NSHeight(rect) / pixelsHigh);
+    trans = [NSAffineTransform transform];
+    [trans translateToPoint:rect.origin];
+    [trans scaleXBy:scale.width yBy:scale.height];
 
-  /* This does essentially what the DPS...image operators do, so
-     as to avoid an extra method call */
-  [gstate DPSimage: trans 
-	          : pixelsWide : pixelsHigh 
-		  : bitsPerSample : samplesPerPixel 
-		  : bitsPerPixel : bytesPerRow 
-		  : isPlanar
-		  : hasAlpha : colorSpaceName
-		  : data];
+    /* This does essentially what the DPS...image operators do, so
+       as to avoid an extra method call */
+    [gstate DPSimage:trans:pixelsWide:pixelsHigh:bitsPerSample:samplesPerPixel:bitsPerPixel:bytesPerRow:isPlanar
+                    :hasAlpha:colorSpaceName:data];
 }
 
-- (void) DPSshfill: (NSDictionary *)shader
+- (void)DPSshfill:(NSDictionary *)shader
 {
-  [gstate DPSshfill: shader];
+    [gstate DPSshfill:shader];
 }
 
-- (void) GSWSetViewIsFlipped: (BOOL) flipped
+- (void)GSWSetViewIsFlipped:(BOOL)flipped
 {
-  if (gstate)
-    gstate->viewIsFlipped = flipped;
+    if (gstate)
+        gstate->viewIsFlipped = flipped;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -1014,127 +1000,116 @@ static NSMapTable *gtable;
 
 - (void)DPSdefineuserobject
 {
-  int n;
-  id obj;
-  NSNumber *number;
+    int n;
+    id obj;
+    NSNumber *number;
 
-  ctxt_pop(obj, opstack, NSObject);
-  ctxt_pop(number, opstack, NSNumber);
-  n = [number intValue];
-  if (n < 0)
-    DPS_ERROR(DPSinvalidparam, @"Invalid userobject index");
-  else 
-    [object_getClass(self) insertObject: obj forKey: n];
+    ctxt_pop(obj, opstack, NSObject);
+    ctxt_pop(number, opstack, NSNumber);
+    n = [number intValue];
+    if (n < 0)
+        DPS_ERROR(DPSinvalidparam, @"Invalid userobject index");
+    else
+        [object_getClass(self) insertObject:obj forKey:n];
 }
 
-- (void)DPSexecuserobject: (NSInteger)index
+- (void)DPSexecuserobject:(NSInteger)index
 {
-  id obj;
+    id obj;
 
-  if (index < 0 || (obj = [object_getClass(self) getObjectForKey: index]) == nil)
-    {
-      DPS_ERROR(DPSinvalidparam, @"Invalid userobject index");
-      return;
+    if (index < 0 || (obj = [object_getClass(self) getObjectForKey:index]) == nil) {
+        DPS_ERROR(DPSinvalidparam, @"Invalid userobject index");
+        return;
     }
-  ctxt_push(obj, opstack);
+    ctxt_push(obj, opstack);
 }
 
-- (void)DPSundefineuserobject: (NSInteger)index
+- (void)DPSundefineuserobject:(NSInteger)index
 {
-  if (index < 0 || [object_getClass(self) getObjectForKey: index] == nil)
-    {
-      DPS_ERROR(DPSinvalidparam, @"Invalid gstate index");
-      return;
+    if (index < 0 || [object_getClass(self) getObjectForKey:index] == nil) {
+        DPS_ERROR(DPSinvalidparam, @"Invalid gstate index");
+        return;
     }
-  [object_getClass(self) removeObjectForKey: index];
+    [object_getClass(self) removeObjectForKey:index];
 }
 
-- (void)DPSclear 
+- (void)DPSclear
 {
-  GSIArrayEmpty((GSIArray)opstack);
-  GSIArrayInitWithZoneAndCapacity((GSIArray)opstack, [self zone], 2);
+    GSIArrayEmpty((GSIArray)opstack);
+    GSIArrayInitWithZoneAndCapacity((GSIArray)opstack, [self zone], 2);
 }
 
-- (void)DPScopy: (int)n 
+- (void)DPScopy:(int)n
 {
-  unsigned count = GSIArrayCount((GSIArray)opstack);
-  int i;
+    unsigned count = GSIArrayCount((GSIArray)opstack);
+    int i;
 
-  for (i = 0; i < n; i++)
-    {
-      NSObject *obj = (GSIArrayItemAtIndex((GSIArray)opstack, count - n + i)).obj;
+    for (i = 0; i < n; i++) {
+        NSObject *obj = (GSIArrayItemAtIndex((GSIArray)opstack, count - n + i)).obj;
 
-      ctxt_push(obj, opstack);
+        ctxt_push(obj, opstack);
     }
 }
 
-- (void)DPScount: (int *)n 
+- (void)DPScount:(int *)n
 {
-  CHECK_NULL_OUTPUT(n);
-  *n = GSIArrayCount((GSIArray)opstack);
+    CHECK_NULL_OUTPUT(n);
+    *n = GSIArrayCount((GSIArray)opstack);
 }
 
-- (void)DPSdup 
+- (void)DPSdup
 {
-  NSObject *obj = (GSIArrayLastItem((GSIArray)opstack)).obj;
+    NSObject *obj = (GSIArrayLastItem((GSIArray)opstack)).obj;
 
-  ctxt_push(obj, opstack);
+    ctxt_push(obj, opstack);
 }
 
-- (void)DPSexch 
+- (void)DPSexch
 {
-  unsigned count = GSIArrayCount((GSIArray)opstack);
+    unsigned count = GSIArrayCount((GSIArray)opstack);
 
-  if (count < 2)
-    {
-      DPS_ERROR(DPSstackunderflow, @"Attempt to exch in empty stack");
-      return;
+    if (count < 2) {
+        DPS_ERROR(DPSstackunderflow, @"Attempt to exch in empty stack");
+        return;
     }
-  GSIArrayInsertItem((GSIArray)opstack, 
-		 GSIArrayLastItem((GSIArray)opstack), count-2);
-  GSIArrayRemoveLastItem((GSIArray)opstack);
+    GSIArrayInsertItem((GSIArray)opstack, GSIArrayLastItem((GSIArray)opstack), count - 2);
+    GSIArrayRemoveLastItem((GSIArray)opstack);
 }
 
-- (void)DPSindex: (int)i 
+- (void)DPSindex:(int)i
 {
-  unsigned count = GSIArrayCount((GSIArray)opstack);
-  NSObject *obj = (GSIArrayItemAtIndex((GSIArray)opstack, count - i)).obj;
+    unsigned count = GSIArrayCount((GSIArray)opstack);
+    NSObject *obj = (GSIArrayItemAtIndex((GSIArray)opstack, count - i)).obj;
 
-  ctxt_push(obj, opstack);
+    ctxt_push(obj, opstack);
 }
 
-- (void)DPSpop 
+- (void)DPSpop
 {
-  id obj;
-  ctxt_pop(obj, opstack, NSObject);
+    id obj;
+    ctxt_pop(obj, opstack, NSObject);
 }
 @end
 
-@implementation GSContext (NSGradient)
-- (void) drawGradient: (NSGradient*)gradient
-           fromCenter: (NSPoint)startCenter
-               radius: (CGFloat)startRadius
-             toCenter: (NSPoint)endCenter 
-               radius: (CGFloat)endRadius
-              options: (NSUInteger)options
+@implementation
+GSContext (NSGradient)
+- (void)drawGradient:(NSGradient *)gradient
+          fromCenter:(NSPoint)startCenter
+              radius:(CGFloat)startRadius
+            toCenter:(NSPoint)endCenter
+              radius:(CGFloat)endRadius
+             options:(NSUInteger)options
 {
-  [gstate drawGradient: gradient
-          fromCenter: startCenter
-          radius: startRadius
-          toCenter: endCenter 
-          radius: endRadius
-          options: options];
+    [gstate drawGradient:gradient fromCenter:startCenter radius:startRadius toCenter:endCenter radius:endRadius
+                 options:options];
 }
 
-- (void) drawGradient: (NSGradient*)gradient
-            fromPoint: (NSPoint)startPoint
-              toPoint: (NSPoint)endPoint
-              options: (NSUInteger)options
+- (void)drawGradient:(NSGradient *)gradient
+           fromPoint:(NSPoint)startPoint
+             toPoint:(NSPoint)endPoint
+             options:(NSUInteger)options
 {
-  [gstate drawGradient: gradient
-          fromPoint: startPoint
-          toPoint: endPoint
-          options: options];
+    [gstate drawGradient:gradient fromPoint:startPoint toPoint:endPoint options:options];
 }
 
 @end

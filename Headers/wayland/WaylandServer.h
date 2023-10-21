@@ -43,139 +43,132 @@
 #include "wayland/xdg-shell-client-protocol.h"
 #include "wayland/wlr-layer-shell-client-protocol.h"
 
-struct pointer
-{
-  struct wl_pointer *wlpointer;
-  float		     x;
-  float		     y;
-  uint32_t	     last_click_button;
-  uint32_t	     last_click_time;
-  float		     last_click_x;
-  float		     last_click_y;
+struct pointer {
+    struct wl_pointer *wlpointer;
+    float x;
+    float y;
+    uint32_t last_click_button;
+    uint32_t last_click_time;
+    float last_click_x;
+    float last_click_y;
 
-  uint32_t		       button;
-  NSTimeInterval	   last_timestamp;
-  enum wl_pointer_button_state button_state;
+    uint32_t button;
+    NSTimeInterval last_timestamp;
+    enum wl_pointer_button_state button_state;
 
-  uint32_t axis_source;
+    uint32_t axis_source;
 
-  uint32_t	 serial;
-  struct window *focus;
-  struct window *captured;
-
+    uint32_t serial;
+    struct window *focus;
+    struct window *captured;
 };
 
-struct cursor
-{
-  struct wl_cursor *cursor;
-  struct wl_surface *surface;
-  struct wl_cursor_image *image;
-  struct wl_buffer *buffer;
+struct cursor {
+    struct wl_cursor *cursor;
+    struct wl_surface *surface;
+    struct wl_cursor_image *image;
+    struct wl_buffer *buffer;
 };
 
-typedef struct _WaylandConfig
-{
-  struct wl_display	    *display;
-  struct wl_registry	     *registry;
-  struct wl_compositor       *compositor;
-  struct wl_shell		  *shell;
-  struct wl_shm		*shm;
-  struct wl_seat		 *seat;
-  struct wl_keyboard	     *keyboard;
-  struct xdg_wm_base	     *wm_base;
-  struct zwlr_layer_shell_v1 *layer_shell;
-  int seat_version;
+typedef struct _WaylandConfig {
+    struct wl_display *display;
+    struct wl_registry *registry;
+    struct wl_compositor *compositor;
+    struct wl_shell *shell;
+    struct wl_shm *shm;
+    struct wl_seat *seat;
+    struct wl_keyboard *keyboard;
+    struct xdg_wm_base *wm_base;
+    struct zwlr_layer_shell_v1 *layer_shell;
+    int seat_version;
 
-  struct wl_list output_list;
-  int		 output_count;
-  struct wl_list window_list;
-  int		 window_count;
-  int		 last_window_id;
+    struct wl_list output_list;
+    int output_count;
+    struct wl_list window_list;
+    int window_count;
+    int last_window_id;
 
-// last event serial from pointer or keyboard
-  uint32_t	 event_serial;
+    // last event serial from pointer or keyboard
+    uint32_t event_serial;
 
 
-// cursor
-  struct wl_cursor_theme *cursor_theme;
-  struct cursor *cursor;
-  struct wl_surface *cursor_surface;
+    // cursor
+    struct wl_cursor_theme *cursor_theme;
+    struct cursor *cursor;
+    struct wl_surface *cursor_surface;
 
-// pointer
-  struct pointer      pointer;
-  float mouse_scroll_multiplier;
+    // pointer
+    struct pointer pointer;
+    float mouse_scroll_multiplier;
 
-// keyboard
-  struct xkb_context *xkb_context;
-  struct
-  {
-    struct xkb_keymap *keymap;
-    struct xkb_state  *state;
-    xkb_mod_mask_t     control_mask;
-    xkb_mod_mask_t     alt_mask;
-    xkb_mod_mask_t     shift_mask;
-  } xkb;
-  int modifiers;
+    // keyboard
+    struct xkb_context *xkb_context;
+    struct {
+        struct xkb_keymap *keymap;
+        struct xkb_state *state;
+        xkb_mod_mask_t control_mask;
+        xkb_mod_mask_t alt_mask;
+        xkb_mod_mask_t shift_mask;
+    } xkb;
+    int modifiers;
 
 } WaylandConfig;
 
-struct output
-{
-  WaylandConfig	*wlconfig;
-  struct wl_output *output;
-  uint32_t	    server_output_id;
-  struct wl_list    link;
-  int		    alloc_x;
-  int		    alloc_y;
-  int		    width;
-  int		    height;
-  int		    transform;
-  int		    scale;
-  char	       *make;
-  char	       *model;
+struct output {
+    WaylandConfig *wlconfig;
+    struct wl_output *output;
+    uint32_t server_output_id;
+    struct wl_list link;
+    int alloc_x;
+    int alloc_y;
+    int width;
+    int height;
+    int transform;
+    int scale;
+    char *make;
+    char *model;
 
-  void *user_data;
+    void *user_data;
 };
 
-struct window
-{
-  WaylandConfig *wlconfig;
-  id		 instance;
-  int		 window_id;
-  struct wl_list link;
-  BOOL		 configured; // surface has been configured once
-  BOOL buffer_needs_attach;  // there is a new buffer avaialble for the surface
-  BOOL terminated;
-  BOOL moving;
-  BOOL resizing;
-  BOOL ignoreMouse;
+struct window {
+    WaylandConfig *wlconfig;
+    id instance;
+    int window_id;
+    struct wl_list link;
+    BOOL configured;           // surface has been configured once
+    BOOL buffer_needs_attach;  // there is a new buffer avaialble for the surface
+    BOOL terminated;
+    BOOL moving;
+    BOOL resizing;
+    BOOL ignoreMouse;
 
-  float pos_x;
-  float pos_y;
-  float width;
-  float height;
-  float saved_pos_x;
-  float saved_pos_y;
-  int	is_out;
-  int	level;
+    float pos_x;
+    float pos_y;
+    float width;
+    float height;
+    float saved_pos_x;
+    float saved_pos_y;
+    int is_out;
+    int level;
 
-  struct wl_surface	    *surface;
-  struct xdg_surface	     *xdg_surface;
-  struct xdg_toplevel	      *toplevel;
-  struct xdg_popup		   *popup;
-  struct xdg_positioner	*positioner;
-  struct zwlr_layer_surface_v1 *layer_surface;
-  struct output		*output;
-  CairoSurface		       *wcs;
+    struct wl_surface *surface;
+    struct xdg_surface *xdg_surface;
+    struct xdg_toplevel *toplevel;
+    struct xdg_popup *popup;
+    struct xdg_positioner *positioner;
+    struct zwlr_layer_surface_v1 *layer_surface;
+    struct output *output;
+    CairoSurface *wcs;
 };
 
 struct window *get_window_with_id(WaylandConfig *wlconfig, int winid);
 
 @interface WaylandServer : GSDisplayServer
 {
-  WaylandConfig *wlconfig;
+    WaylandConfig *wlconfig;
 
-  BOOL _mouseInitialized;
+    BOOL _mouseInitialized;
 }
 @end
 

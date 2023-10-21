@@ -1,6 +1,6 @@
 /*
    FCFontEnumerator.m
- 
+
    Copyright (C) 2003 Free Software Foundation, Inc.
 
    August 31, 2003
@@ -8,7 +8,7 @@
    Base on original code of Alex Malmberg
    Rewrite: Fred Kiefer <fredkiefer@gmx.de>
    Date: Jan 2006
- 
+
    This file is part of GNUstep.
 
    This library is free software; you can redistribute it and/or
@@ -23,8 +23,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -54,549 +54,483 @@
 #endif
 
 static float
-convertWeight (int fcWeight, int bottomValue, int topValue)
+convertWeight(int fcWeight, int bottomValue, int topValue)
 {
-  /*
-    This is the distance between topValue and bottomValue expressed as a
-    fraction between zero and one. We do this to express the range of
-    fontconfig font weights in a useful manner.
-  */
+    /*
+      This is the distance between topValue and bottomValue expressed as a
+      fraction between zero and one. We do this to express the range of
+      fontconfig font weights in a useful manner.
+    */
 
-  if (fcWeight <= bottomValue)
-    {
-      return 0.0;
-    }
-  else if (fcWeight >= topValue)
-    {
-      return 1.0;
-    }
-  else
-    {
-      return (float) (fcWeight - bottomValue) * (1.0f / (topValue - bottomValue));
+    if (fcWeight <= bottomValue) {
+        return 0.0;
+    } else if (fcWeight >= topValue) {
+        return 1.0;
+    } else {
+        return (float)(fcWeight - bottomValue) * (1.0f / (topValue - bottomValue));
     }
 }
 
 static NSComparisonResult
 sortFontFacesArray(id fontArr1, id fontArr2, void *context)
 {
-  /*
-    Order of array:
-      0: Font name
-      1: Font style
-      2: Font weight
-      3: Font traits
-  */
-  NSString *style1 = [fontArr1 objectAtIndex: 1];
-  NSString *style2 = [fontArr2 objectAtIndex: 1];
-  float weight1 = [[fontArr1 objectAtIndex: 2] floatValue];
-  float weight2 = [[fontArr2 objectAtIndex: 2] floatValue];
-  unsigned int traits1 = [[fontArr1 objectAtIndex: 3] unsignedIntValue];
-  unsigned int traits2 = [[fontArr2 objectAtIndex: 3] unsignedIntValue];
+    /*
+      Order of array:
+        0: Font name
+        1: Font style
+        2: Font weight
+        3: Font traits
+    */
+    NSString *style1 = [fontArr1 objectAtIndex:1];
+    NSString *style2 = [fontArr2 objectAtIndex:1];
+    float weight1 = [[fontArr1 objectAtIndex:2] floatValue];
+    float weight2 = [[fontArr2 objectAtIndex:2] floatValue];
+    unsigned int traits1 = [[fontArr1 objectAtIndex:3] unsignedIntValue];
+    unsigned int traits2 = [[fontArr2 objectAtIndex:3] unsignedIntValue];
 
-  // order first by weight
-  if (weight1 < weight2)
-    return NSOrderedAscending;
-  if (weight1 > weight2)
-    return NSOrderedDescending;
+    // order first by weight
+    if (weight1 < weight2)
+        return NSOrderedAscending;
+    if (weight1 > weight2)
+        return NSOrderedDescending;
 
-  // Italic next
-  if ((traits1 & NSItalicFontMask) < (traits2 & NSItalicFontMask))
-    return NSOrderedAscending;
-  if ((traits1 & NSItalicFontMask) > (traits2 & NSItalicFontMask))
-    return NSOrderedDescending;
+    // Italic next
+    if ((traits1 & NSItalicFontMask) < (traits2 & NSItalicFontMask))
+        return NSOrderedAscending;
+    if ((traits1 & NSItalicFontMask) > (traits2 & NSItalicFontMask))
+        return NSOrderedDescending;
 
-  // now do condensed
-  if ((traits1 & NSCondensedFontMask) < (traits2 & NSCondensedFontMask))
-    return NSOrderedAscending;
-  if ((traits1 & NSCondensedFontMask) > (traits2 & NSCondensedFontMask))
-    return NSOrderedDescending;
-  // ...and expanded
-  if ((traits1 & NSExpandedFontMask) < (traits2 & NSExpandedFontMask))
-    return NSOrderedAscending;
-  if ((traits1 & NSExpandedFontMask) > (traits2 & NSExpandedFontMask))
-    return NSOrderedDescending;
+    // now do condensed
+    if ((traits1 & NSCondensedFontMask) < (traits2 & NSCondensedFontMask))
+        return NSOrderedAscending;
+    if ((traits1 & NSCondensedFontMask) > (traits2 & NSCondensedFontMask))
+        return NSOrderedDescending;
+    // ...and expanded
+    if ((traits1 & NSExpandedFontMask) < (traits2 & NSExpandedFontMask))
+        return NSOrderedAscending;
+    if ((traits1 & NSExpandedFontMask) > (traits2 & NSExpandedFontMask))
+        return NSOrderedDescending;
 
-  // Special case: "Regular" sorts before non-Regular, for many reasons.
-  if ([style1 isEqualToString: @"Regular"] && ![style2 isEqualToString: @"Regular"])
-    return NSOrderedAscending;
-  if ([style2 isEqualToString: @"Regular"] && ![style1 isEqualToString: @"Regular"])
-    return NSOrderedDescending;
-  if ([style1 isEqualToString: @"Normal"] && ![style2 isEqualToString: @"Normal"])
-    return NSOrderedAscending;
-  if ([style2 isEqualToString: @"Normal"] && ![style1 isEqualToString: @"Normal"])
-    return NSOrderedDescending;
-  if ([style1 isEqualToString: @"Roman"] && ![style2 isEqualToString: @"Roman"])
-    return NSOrderedAscending;
-  if ([style2 isEqualToString: @"Roman"] && ![style1 isEqualToString: @"Roman"])
-    return NSOrderedDescending;
+    // Special case: "Regular" sorts before non-Regular, for many reasons.
+    if ([style1 isEqualToString:@"Regular"] && ![style2 isEqualToString:@"Regular"])
+        return NSOrderedAscending;
+    if ([style2 isEqualToString:@"Regular"] && ![style1 isEqualToString:@"Regular"])
+        return NSOrderedDescending;
+    if ([style1 isEqualToString:@"Normal"] && ![style2 isEqualToString:@"Normal"])
+        return NSOrderedAscending;
+    if ([style2 isEqualToString:@"Normal"] && ![style1 isEqualToString:@"Normal"])
+        return NSOrderedDescending;
+    if ([style1 isEqualToString:@"Roman"] && ![style2 isEqualToString:@"Roman"])
+        return NSOrderedAscending;
+    if ([style2 isEqualToString:@"Roman"] && ![style1 isEqualToString:@"Roman"])
+        return NSOrderedDescending;
 
-  // Otherwise, alphabetize
-  return [style1 compare: style2];
+    // Otherwise, alphabetize
+    return [style1 compare:style2];
 }
 
-@implementation FCFontEnumerator 
+@implementation FCFontEnumerator
 
-NSMutableDictionary * __allFonts;
+NSMutableDictionary *__allFonts;
 
-+ (FCFaceInfo *) fontWithName: (NSString *) name
++ (FCFaceInfo *)fontWithName:(NSString *)name
 {
-  FCFaceInfo *face;
+    FCFaceInfo *face;
 
-  face = [__allFonts objectForKey: name];
-  if (!face)
-    {
-      NSDebugLLog(@"NSFont", @"Font not found %@", name);
+    face = [__allFonts objectForKey:name];
+    if (!face) {
+        NSDebugLLog(@"NSFont", @"Font not found %@", name);
     }
-  return face;
+    return face;
 }
 
-+ (Class) faceInfoClass
++ (Class)faceInfoClass
 {
-  [self subclassResponsibility: _cmd];
-  return nil;
+    [self subclassResponsibility:_cmd];
+    return nil;
 }
 
 // Make a GNUstep style font descriptor from a FcPattern
-static NSArray *faFromFc(FcPattern *pat)
+static NSArray *
+faFromFc(FcPattern *pat)
 {
-  int weight, slant, spacing, width;
-  float nsweight;
-  unsigned int nstraits = 0;
-  char *fcfamily, *fcstyle;
-  NSMutableString *name, *family, *style;
+    int weight, slant, spacing, width;
+    float nsweight;
+    unsigned int nstraits = 0;
+    char *fcfamily, *fcstyle;
+    NSMutableString *name, *family, *style;
 #ifdef FC_POSTSCRIPT_NAME
-  char *fcname;
+    char *fcname;
 #endif
-  /*
-  FcResult res = FcPatternGetString(pat, FC_FAMILY, 0, (FcChar8**)&fcfamily);
+    /*
+    FcResult res = FcPatternGetString(pat, FC_FAMILY, 0, (FcChar8**)&fcfamily);
 
-  // Temporary fix for the limited set of fonts in test, fontconfig seams to fail to provide
-  // the FC_FAMILY for every font, but its not wort fixing if cairo backend is not functional.
-  if (res != FcResultMatch) {
-    char *f_name;
-    FcResult res2 = FcPatternGetString(pat, FC_FULLNAME, 0, (FcChar8**)&f_name);
-    if (res2 == FcResultMatch) {
-      char *tmp = fc_bug_familyFallback(f_name);
-      if (tmp != NULL) {
-        fcfamily = tmp;
-      } else {
-        fprintf(stderr, "could not get FC_FULLNAME\n");
-        return nil;
+    // Temporary fix for the limited set of fonts in test, fontconfig seams to fail to provide
+    // the FC_FAMILY for every font, but its not wort fixing if cairo backend is not functional.
+    if (res != FcResultMatch) {
+      char *f_name;
+      FcResult res2 = FcPatternGetString(pat, FC_FULLNAME, 0, (FcChar8**)&f_name);
+      if (res2 == FcResultMatch) {
+        char *tmp = fc_bug_familyFallback(f_name);
+        if (tmp != NULL) {
+          fcfamily = tmp;
+        } else {
+          fprintf(stderr, "could not get FC_FULLNAME\n");
+          return nil;
+        }
       }
+    }*/
+
+    if (FcPatternGetInteger(pat, FC_WEIGHT, 0, &weight) != FcResultMatch ||
+        FcPatternGetInteger(pat, FC_SLANT, 0, &slant) != FcResultMatch ||
+        FcPatternGetString(pat, FC_FAMILY, 0, (FcChar8 **)&fcfamily) != FcResultMatch) {
+        return nil;
     }
-  }*/
 
-  if (FcPatternGetInteger(pat, FC_WEIGHT, 0, &weight) != FcResultMatch
-    || FcPatternGetInteger(pat, FC_SLANT,  0, &slant) != FcResultMatch 
-    || FcPatternGetString(pat, FC_FAMILY, 0, (FcChar8 **)&fcfamily) != FcResultMatch) {
-    return nil;
-  }
+    if (FcPatternGetInteger(pat, FC_SPACING, 0, &spacing) == FcResultMatch)
+        if (spacing == FC_MONO || spacing == FC_CHARCELL)
+            nstraits |= NSFixedPitchFontMask;
 
-  if (FcPatternGetInteger(pat, FC_SPACING, 0, &spacing) == FcResultMatch)
-    if (spacing==FC_MONO || spacing==FC_CHARCELL)
-      nstraits |= NSFixedPitchFontMask;
-
-  name = [NSMutableString stringWithCapacity: 100];
+    name = [NSMutableString stringWithCapacity:100];
 #ifdef FC_POSTSCRIPT_NAME
-  if (FcPatternGetString(pat, FC_POSTSCRIPT_NAME,  0, (FcChar8 **)&fcname) == FcResultMatch)
-    [name appendString: [NSMutableString stringWithUTF8String: fcname]];
+    if (FcPatternGetString(pat, FC_POSTSCRIPT_NAME, 0, (FcChar8 **)&fcname) == FcResultMatch)
+        [name appendString:[NSMutableString stringWithUTF8String:fcname]];
 #endif
 
-  family = [NSMutableString stringWithUTF8String: fcfamily];
-  style = [NSMutableString stringWithCapacity: 100];
+    family = [NSMutableString stringWithUTF8String:fcfamily];
+    style = [NSMutableString stringWithCapacity:100];
 
-  if (weight < FC_WEIGHT_ULTRALIGHT)
-    {
-      [style appendString: @"Thin"];
-      nsweight = 1 + convertWeight (weight, FC_WEIGHT_THIN, FC_WEIGHT_ULTRALIGHT);
-    }
-  else if (weight < FC_WEIGHT_LIGHT)
-    {
-      [style appendString: @"Ultralight"];
-      nsweight = 2 + convertWeight (weight, FC_WEIGHT_ULTRALIGHT, FC_WEIGHT_LIGHT);
-    }
-  else if (weight < FC_WEIGHT_BOOK)
-    {
-      [style appendString: @"Light"];
-      nsweight = 3 + convertWeight (weight, FC_WEIGHT_LIGHT, FC_WEIGHT_BOOK);
-    }
-  else if (weight < FC_WEIGHT_REGULAR)
-    {
-      [style appendString: @"Book"];
-      nsweight = 4 + convertWeight (weight, FC_WEIGHT_BOOK, FC_WEIGHT_REGULAR);
-    }
-  else if (weight < FC_WEIGHT_MEDIUM)
-    {
-      nsweight = 5 + convertWeight (weight, FC_WEIGHT_REGULAR, FC_WEIGHT_MEDIUM);
-    }
-  else if (weight < FC_WEIGHT_DEMIBOLD)
-    {
-      [style appendString: @"Medium"];
-      nsweight = 6 + convertWeight (weight, FC_WEIGHT_MEDIUM, FC_WEIGHT_DEMIBOLD);
-    }
-  else if (weight < FC_WEIGHT_BOLD)
-    {
-      [style appendString: @"Demibold"];
-      nsweight = 7 + convertWeight (weight, FC_WEIGHT_DEMIBOLD, FC_WEIGHT_BOLD);
-    }
-  else if (weight < FC_WEIGHT_ULTRABOLD)
-    {
-      [style appendString: @"Bold"];
-      nsweight = 9 + convertWeight (weight, FC_WEIGHT_BOLD, FC_WEIGHT_ULTRABOLD);
-      nstraits |= NSBoldFontMask;
-    }
-  else if (weight < FC_WEIGHT_BLACK)
-    {
-      [style appendString: @"Ultrabold"];
-      nsweight = 11 + convertWeight (weight, FC_WEIGHT_ULTRABOLD, FC_WEIGHT_BLACK);
-      nstraits |= NSBoldFontMask;
-    }
-  else if (weight < FC_WEIGHT_ULTRABLACK)
-    {
-      [style appendString: @"Black"];
-      nsweight = 12 + convertWeight (weight, FC_WEIGHT_BLACK, FC_WEIGHT_ULTRABLACK);
-      nstraits |= NSBoldFontMask;
-    }
-  else
-    {
-      [style appendString: @"Ultrablack"];
-      nsweight = 13 + convertWeight (weight, FC_WEIGHT_ULTRABLACK, FC_WEIGHT_ULTRABLACK + 20);
-      nstraits |= NSBoldFontMask;
+    if (weight < FC_WEIGHT_ULTRALIGHT) {
+        [style appendString:@"Thin"];
+        nsweight = 1 + convertWeight(weight, FC_WEIGHT_THIN, FC_WEIGHT_ULTRALIGHT);
+    } else if (weight < FC_WEIGHT_LIGHT) {
+        [style appendString:@"Ultralight"];
+        nsweight = 2 + convertWeight(weight, FC_WEIGHT_ULTRALIGHT, FC_WEIGHT_LIGHT);
+    } else if (weight < FC_WEIGHT_BOOK) {
+        [style appendString:@"Light"];
+        nsweight = 3 + convertWeight(weight, FC_WEIGHT_LIGHT, FC_WEIGHT_BOOK);
+    } else if (weight < FC_WEIGHT_REGULAR) {
+        [style appendString:@"Book"];
+        nsweight = 4 + convertWeight(weight, FC_WEIGHT_BOOK, FC_WEIGHT_REGULAR);
+    } else if (weight < FC_WEIGHT_MEDIUM) {
+        nsweight = 5 + convertWeight(weight, FC_WEIGHT_REGULAR, FC_WEIGHT_MEDIUM);
+    } else if (weight < FC_WEIGHT_DEMIBOLD) {
+        [style appendString:@"Medium"];
+        nsweight = 6 + convertWeight(weight, FC_WEIGHT_MEDIUM, FC_WEIGHT_DEMIBOLD);
+    } else if (weight < FC_WEIGHT_BOLD) {
+        [style appendString:@"Demibold"];
+        nsweight = 7 + convertWeight(weight, FC_WEIGHT_DEMIBOLD, FC_WEIGHT_BOLD);
+    } else if (weight < FC_WEIGHT_ULTRABOLD) {
+        [style appendString:@"Bold"];
+        nsweight = 9 + convertWeight(weight, FC_WEIGHT_BOLD, FC_WEIGHT_ULTRABOLD);
+        nstraits |= NSBoldFontMask;
+    } else if (weight < FC_WEIGHT_BLACK) {
+        [style appendString:@"Ultrabold"];
+        nsweight = 11 + convertWeight(weight, FC_WEIGHT_ULTRABOLD, FC_WEIGHT_BLACK);
+        nstraits |= NSBoldFontMask;
+    } else if (weight < FC_WEIGHT_ULTRABLACK) {
+        [style appendString:@"Black"];
+        nsweight = 12 + convertWeight(weight, FC_WEIGHT_BLACK, FC_WEIGHT_ULTRABLACK);
+        nstraits |= NSBoldFontMask;
+    } else {
+        [style appendString:@"Ultrablack"];
+        nsweight = 13 + convertWeight(weight, FC_WEIGHT_ULTRABLACK, FC_WEIGHT_ULTRABLACK + 20);
+        nstraits |= NSBoldFontMask;
     }
 
-  if (FcPatternGetInteger(pat, FC_WIDTH, 0, &width) == FcResultMatch)
-    {
-      if (width < FC_WIDTH_EXTRACONDENSED)
-	{
-	  [style appendString: @"Ultracondensed"];
-	  nstraits |= NSCondensedFontMask;
-	}
-      else if (width < FC_WIDTH_CONDENSED)
-	{
-	  [style appendString: @"Extracondensed"];
-	  nstraits |= NSCondensedFontMask;
-	}
-      else if (width < FC_WIDTH_SEMICONDENSED)
-	{
-	  [style appendString: @"Condensed"];
-	  nstraits |= NSCondensedFontMask;
-	}
-      else if (width < FC_WIDTH_SEMIEXPANDED)
-	{
-	  // do nothing, this is "regular"
-	}
-      else if (width < FC_WIDTH_EXPANDED)
-	{
-	  [style appendString: @"Semiexpanded"];
-	  nstraits |= NSExpandedFontMask;
-	}
-      else if (width < FC_WIDTH_EXTRAEXPANDED)
-	{
-	  [style appendString: @"Expanded"];
-	  nstraits |= NSExpandedFontMask;
-	}
-      else if (width < FC_WIDTH_ULTRAEXPANDED)
-	{
-	  [style appendString: @"Extraexpanded"];
-	  nstraits |= NSExpandedFontMask;
-	}
-      else
-	{
-	  [style appendString: @"Ultraexpanded"];
-	  nstraits |= NSExpandedFontMask;
-	}
-    }
-
-  switch (slant) 
-    {
-      case FC_SLANT_ROMAN:
-        break;
-      case FC_SLANT_ITALIC:
-        [style appendString: @"Italic"];
-        nstraits |= NSItalicFontMask;
-        break;
-      case FC_SLANT_OBLIQUE:
-        [style appendString: @"Oblique"];
-        nstraits |= NSItalicFontMask;
-        break;
-    }
-
-  if (![name length])	// no psname
-    {
-      NSDebugLLog(@"NSFont", @"Warning: synthesizing PSName for '%@ %@'", family, style);
-      [name appendString: family];
-      if ([style length] > 0)
-        {
-          [name appendString: @"-"];
-          [name appendString: style];
+    if (FcPatternGetInteger(pat, FC_WIDTH, 0, &width) == FcResultMatch) {
+        if (width < FC_WIDTH_EXTRACONDENSED) {
+            [style appendString:@"Ultracondensed"];
+            nstraits |= NSCondensedFontMask;
+        } else if (width < FC_WIDTH_CONDENSED) {
+            [style appendString:@"Extracondensed"];
+            nstraits |= NSCondensedFontMask;
+        } else if (width < FC_WIDTH_SEMICONDENSED) {
+            [style appendString:@"Condensed"];
+            nstraits |= NSCondensedFontMask;
+        } else if (width < FC_WIDTH_SEMIEXPANDED) {
+            // do nothing, this is "regular"
+        } else if (width < FC_WIDTH_EXPANDED) {
+            [style appendString:@"Semiexpanded"];
+            nstraits |= NSExpandedFontMask;
+        } else if (width < FC_WIDTH_EXTRAEXPANDED) {
+            [style appendString:@"Expanded"];
+            nstraits |= NSExpandedFontMask;
+        } else if (width < FC_WIDTH_ULTRAEXPANDED) {
+            [style appendString:@"Extraexpanded"];
+            nstraits |= NSExpandedFontMask;
+        } else {
+            [style appendString:@"Ultraexpanded"];
+            nstraits |= NSExpandedFontMask;
         }
     }
 
-  if (![style length])
-    {
-      [style setString: @"Regular"];
+    switch (slant) {
+        case FC_SLANT_ROMAN:
+            break;
+        case FC_SLANT_ITALIC:
+            [style appendString:@"Italic"];
+            nstraits |= NSItalicFontMask;
+            break;
+        case FC_SLANT_OBLIQUE:
+            [style appendString:@"Oblique"];
+            nstraits |= NSItalicFontMask;
+            break;
     }
 
-  if (FcPatternGetString(pat, FC_STYLE, 0, (FcChar8 **)&fcstyle) == FcResultMatch)
-    style = [NSString stringWithUTF8String: fcstyle];
+    if (![name length])  // no psname
+    {
+        NSDebugLLog(@"NSFont", @"Warning: synthesizing PSName for '%@ %@'", family, style);
+        [name appendString:family];
+        if ([style length] > 0) {
+            [name appendString:@"-"];
+            [name appendString:style];
+        }
+    }
 
-  //  NSLog (@"family: %@, style: %s/%@", name, fcstyle, style);  
-  return @[name, style,  [NSNumber numberWithFloat: nsweight], [NSNumber numberWithUnsignedInt: nstraits]];
+    if (![style length]) {
+        [style setString:@"Regular"];
+    }
+
+    if (FcPatternGetString(pat, FC_STYLE, 0, (FcChar8 **)&fcstyle) == FcResultMatch)
+        style = [NSString stringWithUTF8String:fcstyle];
+
+    //  NSLog (@"family: %@, style: %s/%@", name, fcstyle, style);
+    return @[name, style, [NSNumber numberWithFloat:nsweight], [NSNumber numberWithUnsignedInt:nstraits]];
 }
 
-- (void) enumerateFontsAndFamilies
+- (void)enumerateFontsAndFamilies
 {
-  int i;
-  NSMutableDictionary *fcxft_allFontFamilies = [NSMutableDictionary new];
-  NSMutableDictionary *fcxft_allFonts = [NSMutableDictionary new];
-  NSMutableArray *fcxft_allFontNames = [NSMutableArray new];
-  Class faceInfoClass = [[self class] faceInfoClass];
+    int i;
+    NSMutableDictionary *fcxft_allFontFamilies = [NSMutableDictionary new];
+    NSMutableDictionary *fcxft_allFonts = [NSMutableDictionary new];
+    NSMutableArray *fcxft_allFontNames = [NSMutableArray new];
+    Class faceInfoClass = [[self class] faceInfoClass];
 
-  FcConfig *config = FcInitLoadConfigAndFonts();
-  FcPattern *pat = FcPatternCreate();
-  FcObjectSet *os = FcObjectSetCreate();
-  FcObjectSetAdd(os, FC_FAMILY);
-  FcObjectSetAdd(os, FC_STYLE);
-  FcObjectSetAdd(os, FC_FULLNAME);
+    FcConfig *config = FcInitLoadConfigAndFonts();
+    FcPattern *pat = FcPatternCreate();
+    FcObjectSet *os = FcObjectSetCreate();
+    FcObjectSetAdd(os, FC_FAMILY);
+    FcObjectSetAdd(os, FC_STYLE);
+    FcObjectSetAdd(os, FC_FULLNAME);
 #ifdef FC_POSTSCRIPT_NAME
-  FcObjectSetAdd(os, FC_POSTSCRIPT_NAME);
+    FcObjectSetAdd(os, FC_POSTSCRIPT_NAME);
 #endif
-  FcObjectSetAdd(os, FC_SLANT);
-  FcObjectSetAdd(os, FC_WEIGHT);
-  FcObjectSetAdd(os, FC_WIDTH);
-  FcObjectSetAdd(os, FC_SPACING);
-  FcFontSet *fs = FcFontList(config, pat, os);
+    FcObjectSetAdd(os, FC_SLANT);
+    FcObjectSetAdd(os, FC_WEIGHT);
+    FcObjectSetAdd(os, FC_WIDTH);
+    FcObjectSetAdd(os, FC_SPACING);
+    FcFontSet *fs = FcFontList(config, pat, os);
 
-  //fprintf(stderr, "Did enter at %s font count %d\n", __PRETTY_FUNCTION__, fs->nfont);
-  // https://github.com/prepare/xetex/blob/b7ef352d2c0dd164f339eaf3d522cc752bb185c4/source/texk/web2c/xetexdir/XeTeXFontMgr_FC.cpp
+    // fprintf(stderr, "Did enter at %s font count %d\n", __PRETTY_FUNCTION__, fs->nfont);
+    //  https://github.com/prepare/xetex/blob/b7ef352d2c0dd164f339eaf3d522cc752bb185c4/source/texk/web2c/xetexdir/XeTeXFontMgr_FC.cpp
 
-  int cnt_a = 0;
-  int cnt_b = 0;
+    int cnt_a = 0;
+    int cnt_b = 0;
 
-  for (i = 0; i < fs->nfont; i++) {
+    for (i = 0; i < fs->nfont; i++) {
 
-      FcPattern* font = fs->fonts[i];
-      char *family;
+        FcPattern *font = fs->fonts[i];
+        char *family;
 
-      FcResult res = FcPatternGetString(font, FC_FAMILY, 0, (FcChar8**)&family);
-      /*
-      // Temporary fix for the limited set of fonts in test, fontconfig seams to fail to provide
-      // the FC_FAMILY for every font, but its not wort fixing if cairo backend is not functional.
-      if (res != FcResultMatch) {
-        char *f_name;
-        FcResult res2 = FcPatternGetString(font, FC_FULLNAME, 0, (FcChar8**)&f_name);
-        if (res2 == FcResultMatch) {
-          char *tmp = fc_bug_familyFallback(f_name);
-          if (tmp != NULL) {
-            family = tmp;
-            fallback = YES;
+        FcResult res = FcPatternGetString(font, FC_FAMILY, 0, (FcChar8 **)&family);
+        /*
+        // Temporary fix for the limited set of fonts in test, fontconfig seams to fail to provide
+        // the FC_FAMILY for every font, but its not wort fixing if cairo backend is not functional.
+        if (res != FcResultMatch) {
+          char *f_name;
+          FcResult res2 = FcPatternGetString(font, FC_FULLNAME, 0, (FcChar8**)&f_name);
+          if (res2 == FcResultMatch) {
+            char *tmp = fc_bug_familyFallback(f_name);
+            if (tmp != NULL) {
+              family = tmp;
+              fallback = YES;
+            }
           }
-        }
-      }*/
-      if (res == FcResultMatch) {
+        }*/
+        if (res == FcResultMatch) {
 
-          NSArray *fontArray;
-          
+            NSArray *fontArray;
 
-          fontArray = faFromFc(fs->fonts[i]);
-          if (fontArray != nil)
-            {
-              cnt_a++;
-              NSString *name = [fontArray objectAtIndex: 0];
 
-              if (![fcxft_allFontNames containsObject: name]) {
-                  cnt_b++;
-                  NSString *familyString;
-                  NSMutableArray *familyArray;
-                  FCFaceInfo *aFont;
+            fontArray = faFromFc(fs->fonts[i]);
+            if (fontArray != nil) {
+                cnt_a++;
+                NSString *name = [fontArray objectAtIndex:0];
 
-                  familyString = [NSString stringWithUTF8String: family];
-                  familyArray = [fcxft_allFontFamilies objectForKey: familyString];
+                if (![fcxft_allFontNames containsObject:name]) {
+                    cnt_b++;
+                    NSString *familyString;
+                    NSMutableArray *familyArray;
+                    FCFaceInfo *aFont;
 
-                  if (familyArray == nil)
-                    {
-                      NSDebugLLog(@"NSFont", @"Found font family %@", familyString);
-                      familyArray = [[NSMutableArray alloc] init];
-                      [fcxft_allFontFamilies setObject: familyArray
-                                                forKey: familyString];
-                      RELEASE(familyArray);
+                    familyString = [NSString stringWithUTF8String:family];
+                    familyArray = [fcxft_allFontFamilies objectForKey:familyString];
+
+                    if (familyArray == nil) {
+                        NSDebugLLog(@"NSFont", @"Found font family %@", familyString);
+                        familyArray = [[NSMutableArray alloc] init];
+                        [fcxft_allFontFamilies setObject:familyArray forKey:familyString];
+                        RELEASE(familyArray);
                     }
-                  NSDebugLLog(@"NSFont", @"fc enumerator: adding font: %@", name);
-                  [familyArray addObject: fontArray];
-                  [fcxft_allFontNames addObject: name];
-                  aFont = [[faceInfoClass alloc] initWithfamilyName: familyString
-                              weight: [[fontArray objectAtIndex: 2] floatValue]
-                              traits: [[fontArray objectAtIndex: 3] unsignedIntValue]
-                             pattern: fs->fonts[i]];
-                  [fcxft_allFonts setObject: aFont forKey: name];
-                  RELEASE(aFont);
+                    NSDebugLLog(@"NSFont", @"fc enumerator: adding font: %@", name);
+                    [familyArray addObject:fontArray];
+                    [fcxft_allFontNames addObject:name];
+                    aFont = [[faceInfoClass alloc] initWithfamilyName:familyString
+                                                               weight:[[fontArray objectAtIndex:2] floatValue]
+                                                               traits:[[fontArray objectAtIndex:3] unsignedIntValue]
+                                                              pattern:fs->fonts[i]];
+                    [fcxft_allFonts setObject:aFont forKey:name];
+                    RELEASE(aFont);
                 }
             }
         }
     }
 
-  FcPatternDestroy(pat);
-  FcObjectSetDestroy(os);
-  FcFontSetDestroy (fs);
+    FcPatternDestroy(pat);
+    FcObjectSetDestroy(os);
+    FcFontSetDestroy(fs);
 
-  //fprintf(stderr, "total NCFontEnumerator count is %lu; %d fonts in 1. step %d fonts in 2. step   \n", [fcxft_allFonts count], cnt_a, cnt_b);
+    // fprintf(stderr, "total NCFontEnumerator count is %lu; %d fonts in 1. step %d fonts in 2. step   \n",
+    // [fcxft_allFonts count], cnt_a, cnt_b);
 
-  allFontNames = fcxft_allFontNames;
-  RETAIN(allFontNames);
-  allFontFamilies = fcxft_allFontFamilies;
-  RETAIN(allFontFamilies);
-  __allFonts = fcxft_allFonts;
-  RETAIN(__allFonts);
+    allFontNames = fcxft_allFontNames;
+    RETAIN(allFontNames);
+    allFontFamilies = fcxft_allFontFamilies;
+    RETAIN(allFontFamilies);
+    __allFonts = fcxft_allFonts;
+    RETAIN(__allFonts);
 
-  /*{
-    NSEnumerator *e= [fcxft_allFonts objectEnumerator];
-    NSString *name;
-    while (name = (NSString*)[e nextObject]) {
-      fprintf(stderr, "'%s'\n", [name cString]);
-    }
-  }*/
-  // Sort font families
-  {
-    NSComparisonResult (*fontSort)(id, id, void *) = sortFontFacesArray;
-    NSEnumerator *e = [allFontFamilies keyEnumerator];
-    id key;
-
-    while ((key = [e nextObject]))
-      {
-        [[allFontFamilies objectForKey: key] sortUsingFunction: fontSort context: NULL];
+    /*{
+      NSEnumerator *e= [fcxft_allFonts objectEnumerator];
+      NSString *name;
+      while (name = (NSString*)[e nextObject]) {
+        fprintf(stderr, "'%s'\n", [name cString]);
       }
-  }
+    }*/
+    // Sort font families
+    {
+        NSComparisonResult (*fontSort)(id, id, void *) = sortFontFacesArray;
+        NSEnumerator *e = [allFontFamilies keyEnumerator];
+        id key;
+
+        while ((key = [e nextObject])) {
+            [[allFontFamilies objectForKey:key] sortUsingFunction:fontSort context:NULL];
+        }
+    }
 }
 
-- (NSString *) defaultSystemFontName
+- (NSString *)defaultSystemFontName
 {
-  if ([allFontNames containsObject: @"DejaVuSans"])
-    {
-      return @"DejaVuSans";
+    if ([allFontNames containsObject:@"DejaVuSans"]) {
+        return @"DejaVuSans";
     }
-  if ([allFontNames containsObject: @"BitstreamVeraSans-Roman"])
-    {
-      return @"BitstreamVeraSans-Roman";
+    if ([allFontNames containsObject:@"BitstreamVeraSans-Roman"]) {
+        return @"BitstreamVeraSans-Roman";
     }
-  if ([allFontNames containsObject: @"FreeSans"])
-    {
-      return @"FreeSans";
+    if ([allFontNames containsObject:@"FreeSans"]) {
+        return @"FreeSans";
     }
-  if ([allFontNames containsObject: @"Tahoma"])
-    {
-      return @"Tahoma";
+    if ([allFontNames containsObject:@"Tahoma"]) {
+        return @"Tahoma";
     }
-  if ([allFontNames containsObject: @"ArialMT"])
-    {
-      return @"ArialMT";
+    if ([allFontNames containsObject:@"ArialMT"]) {
+        return @"ArialMT";
     }
-    fprintf(stderr, "could not find any of the specified fonts for %s defaulting to Helvetica\n", __PRETTY_FUNCTION__);
-  return @"Helvetica";
+    fprintf(stderr, "could not find any of the specified fonts for %s defaulting to Helvetica\n",
+            __PRETTY_FUNCTION__);
+    return @"Helvetica";
 }
 
-- (NSString *) defaultBoldSystemFontName
+- (NSString *)defaultBoldSystemFontName
 {
-  if ([allFontNames containsObject: @"DejaVuSans-Bold"])
-    {
-      return @"DejaVuSans-Bold";
+    if ([allFontNames containsObject:@"DejaVuSans-Bold"]) {
+        return @"DejaVuSans-Bold";
     }
-  if ([allFontNames containsObject: @"BitstreamVeraSans-Bold"])
-    {
-      return @"BitstreamVeraSans-Bold";
+    if ([allFontNames containsObject:@"BitstreamVeraSans-Bold"]) {
+        return @"BitstreamVeraSans-Bold";
     }
-  if ([allFontNames containsObject: @"FreeSans-Bold"])
-    {
-      return @"FreeSans-Bold";
+    if ([allFontNames containsObject:@"FreeSans-Bold"]) {
+        return @"FreeSans-Bold";
     }
-  if ([allFontNames containsObject: @"Tahoma-Bold"])
-    {
-      return @"Tahoma-Bold";
+    if ([allFontNames containsObject:@"Tahoma-Bold"]) {
+        return @"Tahoma-Bold";
     }
-  if ([allFontNames containsObject: @"Arial-BoldMT"])
-    {
-      return @"Arial-BoldMT";
+    if ([allFontNames containsObject:@"Arial-BoldMT"]) {
+        return @"Arial-BoldMT";
     }
-  fprintf(stderr, "could not find any of the specified fonts for %s defaulting to Helvetica\n", __PRETTY_FUNCTION__);
-  return @"Helvetica-Bold";
+    fprintf(stderr, "could not find any of the specified fonts for %s defaulting to Helvetica\n",
+            __PRETTY_FUNCTION__);
+    return @"Helvetica-Bold";
 }
 
-- (NSString *) defaultFixedPitchFontName
+- (NSString *)defaultFixedPitchFontName
 {
-  if ([allFontNames containsObject: @"DejaVuSansMono"])
-    {
-      return @"DejaVuSansMono";
+    if ([allFontNames containsObject:@"DejaVuSansMono"]) {
+        return @"DejaVuSansMono";
     }
-  if ([allFontNames containsObject: @"BitstreamVeraSansMono-Roman"])
-    {
-      return @"BitstreamVeraSansMono-Roman";
+    if ([allFontNames containsObject:@"BitstreamVeraSansMono-Roman"]) {
+        return @"BitstreamVeraSansMono-Roman";
     }
-  if ([allFontNames containsObject: @"FreeMono"])
-    {
-      return @"FreeMono";
+    if ([allFontNames containsObject:@"FreeMono"]) {
+        return @"FreeMono";
     }
-  if ([allFontNames containsObject: @"CourierNewPSMT"])
-    {
-      return @"CourierNewPSMT";
+    if ([allFontNames containsObject:@"CourierNewPSMT"]) {
+        return @"CourierNewPSMT";
     }
-  fprintf(stderr, "could not find any of the specified fonts for %s defaulting to Helvetica\n", __PRETTY_FUNCTION__);
-  return @"Courier";
+    fprintf(stderr, "could not find any of the specified fonts for %s defaulting to Helvetica\n",
+            __PRETTY_FUNCTION__);
+    return @"Courier";
 }
 
 /**
  * Overrides the implementation in GSFontInfo, and delegates the
  * matching to Fontconfig.
  */
-- (NSArray *) matchingFontDescriptorsFor: (NSDictionary *)attributes
+- (NSArray *)matchingFontDescriptorsFor:(NSDictionary *)attributes
 {
-  NSMutableArray *descriptors;
-  FcResult result;
-  FcPattern *matchedpat, *pat;
-  FontconfigPatternGenerator *generator;
+    NSMutableArray *descriptors;
+    FcResult result;
+    FcPattern *matchedpat, *pat;
+    FontconfigPatternGenerator *generator;
 
-  descriptors = [NSMutableArray array];
+    descriptors = [NSMutableArray array];
 
-  generator = [[FontconfigPatternGenerator alloc] init];
-  pat = [generator createPatternWithAttributes: attributes];
-  DESTROY(generator);
+    generator = [[FontconfigPatternGenerator alloc] init];
+    pat = [generator createPatternWithAttributes:attributes];
+    DESTROY(generator);
 
-  FcConfigSubstitute(NULL, pat, FcMatchPattern);
-  FcDefaultSubstitute(pat);
-  result = FcResultMatch;
-  matchedpat = FcFontMatch(NULL, pat, &result);
-  if (result != FcResultMatch)
-    {
-      NSLog(@"Warning, FcFontMatch failed with code: %d", result);
+    FcConfigSubstitute(NULL, pat, FcMatchPattern);
+    FcDefaultSubstitute(pat);
+    result = FcResultMatch;
+    matchedpat = FcFontMatch(NULL, pat, &result);
+    if (result != FcResultMatch) {
+        NSLog(@"Warning, FcFontMatch failed with code: %d", result);
+    } else {
+        FcFontSet *fontSet;
+        result = FcResultMatch;
+        fontSet = FcFontSort(NULL, matchedpat, FcFalse, NULL, &result);
+        if (result == FcResultMatch) {
+            int i;
+            for (i = 0; i < fontSet->nfont; i++) {
+                FontconfigPatternParser *parser = [[FontconfigPatternParser alloc] init];
+                // FIXME: do we need to match this pattern?
+                FcPattern *matchingpat = fontSet->fonts[i];
+                NSDictionary *attribs = [parser attributesFromPattern:matchingpat];
+                [parser release];
+
+                [descriptors addObject:[NSFontDescriptor fontDescriptorWithFontAttributes:attribs]];
+            }
+        } else {
+            NSLog(@"ERROR! FcFontSort failed");
+        }
+
+        FcFontSetDestroy(fontSet);
+        FcPatternDestroy(matchedpat);
     }
-  else
-    {
-      FcFontSet *fontSet;
-      result = FcResultMatch;
-      fontSet = FcFontSort(NULL, matchedpat, FcFalse, NULL, &result);
-      if (result == FcResultMatch)
-	{
-	  int i;
-	  for (i=0; i<fontSet->nfont; i++)
-	    {
-	      FontconfigPatternParser *parser = [[FontconfigPatternParser alloc] init];
-	      // FIXME: do we need to match this pattern?
-	      FcPattern *matchingpat = fontSet->fonts[i];
-	      NSDictionary *attribs = [parser attributesFromPattern: matchingpat];
-	      [parser release];
 
-	      [descriptors addObject: [NSFontDescriptor fontDescriptorWithFontAttributes: attribs]];
-	    }
-	}
-      else
-	{
-	  NSLog(@"ERROR! FcFontSort failed");
-	}
-
-      FcFontSetDestroy(fontSet);
-      FcPatternDestroy(matchedpat);
-    }
-  
-  FcPatternDestroy(pat);
-  return descriptors;
+    FcPatternDestroy(pat);
+    return descriptors;
 }
 
 @end
@@ -604,298 +538,247 @@ static NSArray *faFromFc(FcPattern *pat)
 
 @implementation FontconfigPatternGenerator
 
-- (void)addName: (NSString*)name
+- (void)addName:(NSString *)name
 {
 #ifdef FC_POSTSCRIPT_NAME
-  FcPatternAddString(_pat, FC_POSTSCRIPT_NAME, (const FcChar8 *)[name UTF8String]);
+    FcPatternAddString(_pat, FC_POSTSCRIPT_NAME, (const FcChar8 *)[name UTF8String]);
 #else
-  // FIXME: Fontconfig ignores PostScript names of fonts; we need
-  // https://bugs.freedesktop.org/show_bug.cgi?id=18095 fixed.
-  
-  // This is a heuristic to try to 'parse' a PostScript font name,
-  // however, since they are just unique identifiers for fonts and
-  // don't need to follow any naming convention, this may fail
-  NSRange dash = [name rangeOfString: @"-"];
-  if (dash.location == NSNotFound)
-    {
-      FcPatternAddString(_pat, FC_FAMILY, (const FcChar8 *)[name UTF8String]);
-    }
-  else
-    {
-      NSString *weightAndSlant = [name substringFromIndex: dash.location + 1];
-      NSString *family = [name substringToIndex: dash.location];
+    // FIXME: Fontconfig ignores PostScript names of fonts; we need
+    // https://bugs.freedesktop.org/show_bug.cgi?id=18095 fixed.
 
-      FcPatternAddString(_pat, FC_FAMILY, (const FcChar8 *)[family UTF8String]);
+    // This is a heuristic to try to 'parse' a PostScript font name,
+    // however, since they are just unique identifiers for fonts and
+    // don't need to follow any naming convention, this may fail
+    NSRange dash = [name rangeOfString:@"-"];
+    if (dash.location == NSNotFound) {
+        FcPatternAddString(_pat, FC_FAMILY, (const FcChar8 *)[name UTF8String]);
+    } else {
+        NSString *weightAndSlant = [name substringFromIndex:dash.location + 1];
+        NSString *family = [name substringToIndex:dash.location];
 
-      if (NSNotFound != [weightAndSlant rangeOfString: @"Light"].location)
-	{
-	  FcPatternAddInteger(_pat, FC_WEIGHT, FC_WEIGHT_LIGHT);
-	}
-      else if (NSNotFound != [weightAndSlant rangeOfString: @"Medium"].location)
-	{
-	  FcPatternAddInteger(_pat, FC_WEIGHT, FC_WEIGHT_MEDIUM);
-	}
-      else if (NSNotFound != [weightAndSlant rangeOfString: @"Demibold"].location)
-	{
-	  FcPatternAddInteger(_pat, FC_WEIGHT, FC_WEIGHT_DEMIBOLD);
-	}
-      else if (NSNotFound != [weightAndSlant rangeOfString: @"Bold"].location)
-	{
-	  FcPatternAddInteger(_pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-	}
-      else if (NSNotFound != [weightAndSlant rangeOfString: @"Black"].location)
-	{
-	  FcPatternAddInteger(_pat, FC_WEIGHT, FC_WEIGHT_BLACK);
-	}
+        FcPatternAddString(_pat, FC_FAMILY, (const FcChar8 *)[family UTF8String]);
 
-      if (NSNotFound != [weightAndSlant rangeOfString: @"Italic"].location)
-	{
-	  FcPatternAddInteger(_pat, FC_SLANT, FC_SLANT_ITALIC);
-	}
-      else if (NSNotFound != [weightAndSlant rangeOfString: @"Oblique"].location)
-	{
-	  FcPatternAddInteger(_pat, FC_SLANT, FC_SLANT_OBLIQUE);
-	}
+        if (NSNotFound != [weightAndSlant rangeOfString:@"Light"].location) {
+            FcPatternAddInteger(_pat, FC_WEIGHT, FC_WEIGHT_LIGHT);
+        } else if (NSNotFound != [weightAndSlant rangeOfString:@"Medium"].location) {
+            FcPatternAddInteger(_pat, FC_WEIGHT, FC_WEIGHT_MEDIUM);
+        } else if (NSNotFound != [weightAndSlant rangeOfString:@"Demibold"].location) {
+            FcPatternAddInteger(_pat, FC_WEIGHT, FC_WEIGHT_DEMIBOLD);
+        } else if (NSNotFound != [weightAndSlant rangeOfString:@"Bold"].location) {
+            FcPatternAddInteger(_pat, FC_WEIGHT, FC_WEIGHT_BOLD);
+        } else if (NSNotFound != [weightAndSlant rangeOfString:@"Black"].location) {
+            FcPatternAddInteger(_pat, FC_WEIGHT, FC_WEIGHT_BLACK);
+        }
 
-      if (NSNotFound != [weightAndSlant rangeOfString: @"Condensed"].location)
-	{
-	  FcPatternAddInteger(_pat, FC_WIDTH, FC_WIDTH_CONDENSED);
-	}
-      else if (NSNotFound != [weightAndSlant rangeOfString: @"Expanded"].location)
-	{
-	  FcPatternAddInteger(_pat, FC_WIDTH, FC_WIDTH_EXPANDED);
-	}
+        if (NSNotFound != [weightAndSlant rangeOfString:@"Italic"].location) {
+            FcPatternAddInteger(_pat, FC_SLANT, FC_SLANT_ITALIC);
+        } else if (NSNotFound != [weightAndSlant rangeOfString:@"Oblique"].location) {
+            FcPatternAddInteger(_pat, FC_SLANT, FC_SLANT_OBLIQUE);
+        }
+
+        if (NSNotFound != [weightAndSlant rangeOfString:@"Condensed"].location) {
+            FcPatternAddInteger(_pat, FC_WIDTH, FC_WIDTH_CONDENSED);
+        } else if (NSNotFound != [weightAndSlant rangeOfString:@"Expanded"].location) {
+            FcPatternAddInteger(_pat, FC_WIDTH, FC_WIDTH_EXPANDED);
+        }
     }
 #endif
 }
 
-- (void)addVisibleName: (NSString*)name
+- (void)addVisibleName:(NSString *)name
 {
-  FcPatternAddString(_pat, FC_FULLNAME, (const FcChar8 *)[name UTF8String]);
+    FcPatternAddString(_pat, FC_FULLNAME, (const FcChar8 *)[name UTF8String]);
 }
 
-- (void)addFamilyName: (NSString*)name
+- (void)addFamilyName:(NSString *)name
 {
-  FcPatternAddString(_pat, FC_FAMILY, (const FcChar8 *)[name UTF8String]);
+    FcPatternAddString(_pat, FC_FAMILY, (const FcChar8 *)[name UTF8String]);
 }
 
-- (void)addStyleName: (NSString*)style
+- (void)addStyleName:(NSString *)style
 {
-  FcPatternAddString(_pat, FC_STYLE, (const FcChar8 *)[style UTF8String]);
+    FcPatternAddString(_pat, FC_STYLE, (const FcChar8 *)[style UTF8String]);
 }
 
-- (void)addTraits: (NSDictionary*)traits
+- (void)addTraits:(NSDictionary *)traits
 {
-  if ([traits objectForKey: NSFontSymbolicTrait])
-    {
-      NSFontSymbolicTraits symTraits = [[traits objectForKey: NSFontSymbolicTrait] intValue];
+    if ([traits objectForKey:NSFontSymbolicTrait]) {
+        NSFontSymbolicTraits symTraits = [[traits objectForKey:NSFontSymbolicTrait] intValue];
 
-      if (symTraits & NSFontItalicTrait)
-	{
-	  // NOTE: May be overridden by NSFontSlantTrait
-	  FcPatternAddInteger(_pat, FC_SLANT, FC_SLANT_ITALIC);
-	}
-      if (symTraits & NSFontBoldTrait)
-	{
-	  // NOTE: May be overridden by NSFontWeightTrait
-	  FcPatternAddInteger(_pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-	}
-      if (symTraits & NSFontExpandedTrait)
-	{
-	  // NOTE: May be overridden by NSFontWidthTrait
-	  FcPatternAddInteger(_pat, FC_WIDTH, FC_WIDTH_EXPANDED);
-	}
-      if (symTraits & NSFontCondensedTrait)
-	{
-	  // NOTE: May be overridden by NSFontWidthTrait
-	  FcPatternAddInteger(_pat, FC_WIDTH, FC_WIDTH_CONDENSED);
-	}
-      if (symTraits & NSFontMonoSpaceTrait)
-	{
-	  FcValue value;
-	  // If you run "fc-match :spacing=100", you get "DejaVu Sans" even though you would
-	  // expect to get "DejaVu Sans Mono". So, we also add "monospace" as a weak family
-	  // name to fix the problem.
-	  FcPatternAddInteger(_pat, FC_SPACING, FC_MONO);
-	  
-	  value.type = FcTypeString;
-	  value.u.s = (FcChar8*)"monospace";
-	  FcPatternAddWeak(_pat, FC_FAMILY, value, FcTrue);
-	}
-      if (symTraits & NSFontVerticalTrait)
-	{
-	  // Fontconfig can't express this (it means sideways letters)
-	}
-      if (symTraits & NSFontUIOptimizedTrait)
-	{
-	  // NOTE: Fontconfig can't express this
-	}
+        if (symTraits & NSFontItalicTrait) {
+            // NOTE: May be overridden by NSFontSlantTrait
+            FcPatternAddInteger(_pat, FC_SLANT, FC_SLANT_ITALIC);
+        }
+        if (symTraits & NSFontBoldTrait) {
+            // NOTE: May be overridden by NSFontWeightTrait
+            FcPatternAddInteger(_pat, FC_WEIGHT, FC_WEIGHT_BOLD);
+        }
+        if (symTraits & NSFontExpandedTrait) {
+            // NOTE: May be overridden by NSFontWidthTrait
+            FcPatternAddInteger(_pat, FC_WIDTH, FC_WIDTH_EXPANDED);
+        }
+        if (symTraits & NSFontCondensedTrait) {
+            // NOTE: May be overridden by NSFontWidthTrait
+            FcPatternAddInteger(_pat, FC_WIDTH, FC_WIDTH_CONDENSED);
+        }
+        if (symTraits & NSFontMonoSpaceTrait) {
+            FcValue value;
+            // If you run "fc-match :spacing=100", you get "DejaVu Sans" even though you would
+            // expect to get "DejaVu Sans Mono". So, we also add "monospace" as a weak family
+            // name to fix the problem.
+            FcPatternAddInteger(_pat, FC_SPACING, FC_MONO);
 
-      {
-	NSFontFamilyClass class = symTraits & NSFontFamilyClassMask;
-	char *addWeakFamilyName = NULL;
-	switch (class)
-	  {
-	  default:
-	  case NSFontUnknownClass:
-	  case NSFontOrnamentalsClass:
-	  case NSFontScriptsClass:
-	  case NSFontSymbolicClass:
-	    // FIXME: Is there some way to convey these to Fontconfig?
-	    break;
-	  case NSFontOldStyleSerifsClass:
-	  case NSFontTransitionalSerifsClass:
-	  case NSFontModernSerifsClass:
-	  case NSFontClarendonSerifsClass:
-	  case NSFontSlabSerifsClass:
-	  case NSFontFreeformSerifsClass:
-	    addWeakFamilyName = "serif";
-	    break;
-	  case NSFontSansSerifClass:
-	    addWeakFamilyName = "sans";
-	    break;
-	  }
-	if (addWeakFamilyName)
-	  {
-	    FcValue value;
-	    value.type = FcTypeString;
-	    value.u.s = (const FcChar8 *)addWeakFamilyName;
-	    FcPatternAddWeak(_pat, FC_FAMILY, value, FcTrue);
-	  }
-      }
+            value.type = FcTypeString;
+            value.u.s = (FcChar8 *)"monospace";
+            FcPatternAddWeak(_pat, FC_FAMILY, value, FcTrue);
+        }
+        if (symTraits & NSFontVerticalTrait) {
+            // Fontconfig can't express this (it means sideways letters)
+        }
+        if (symTraits & NSFontUIOptimizedTrait) {
+            // NOTE: Fontconfig can't express this
+        }
+
+        {
+            NSFontFamilyClass class = symTraits & NSFontFamilyClassMask;
+            char *addWeakFamilyName = NULL;
+            switch (class) {
+                default:
+                case NSFontUnknownClass:
+                case NSFontOrnamentalsClass:
+                case NSFontScriptsClass:
+                case NSFontSymbolicClass:
+                    // FIXME: Is there some way to convey these to Fontconfig?
+                    break;
+                case NSFontOldStyleSerifsClass:
+                case NSFontTransitionalSerifsClass:
+                case NSFontModernSerifsClass:
+                case NSFontClarendonSerifsClass:
+                case NSFontSlabSerifsClass:
+                case NSFontFreeformSerifsClass:
+                    addWeakFamilyName = "serif";
+                    break;
+                case NSFontSansSerifClass:
+                    addWeakFamilyName = "sans";
+                    break;
+            }
+            if (addWeakFamilyName) {
+                FcValue value;
+                value.type = FcTypeString;
+                value.u.s = (const FcChar8 *)addWeakFamilyName;
+                FcPatternAddWeak(_pat, FC_FAMILY, value, FcTrue);
+            }
+        }
     }
 
-  if ([traits objectForKey: NSFontWeightTrait])
-    {
-      /**
-       * Scale: -1 is thinnest, 0 is normal, 1 is heaviest
-       */
-      double weight = [[traits objectForKey: NSFontWeightTrait] doubleValue];
-      int fcWeight;
+    if ([traits objectForKey:NSFontWeightTrait]) {
+        /**
+         * Scale: -1 is thinnest, 0 is normal, 1 is heaviest
+         */
+        double weight = [[traits objectForKey:NSFontWeightTrait] doubleValue];
+        int fcWeight;
 
-      weight = MAX(-1, MIN(1, weight));
-      if (weight <= 0)
-	{
-	  fcWeight = FC_WEIGHT_THIN + ((weight + 1.0) * (FC_WEIGHT_NORMAL - FC_WEIGHT_THIN));
-	}
-      else
-	{
-	  fcWeight = FC_WEIGHT_NORMAL + (weight * (FC_WEIGHT_ULTRABLACK - FC_WEIGHT_NORMAL));
-	}
-      FcPatternAddInteger(_pat, FC_WEIGHT, fcWeight);
+        weight = MAX(-1, MIN(1, weight));
+        if (weight <= 0) {
+            fcWeight = FC_WEIGHT_THIN + ((weight + 1.0) * (FC_WEIGHT_NORMAL - FC_WEIGHT_THIN));
+        } else {
+            fcWeight = FC_WEIGHT_NORMAL + (weight * (FC_WEIGHT_ULTRABLACK - FC_WEIGHT_NORMAL));
+        }
+        FcPatternAddInteger(_pat, FC_WEIGHT, fcWeight);
     }
 
-  if ([traits objectForKey: NSFontWidthTrait])
-    {
-      /**
-       * Scale: -1 is most condensed, 0 is normal, 1 is most spread apart
-       */
-      double width = [[traits objectForKey: NSFontWidthTrait] doubleValue];
-      int fcWidth;
+    if ([traits objectForKey:NSFontWidthTrait]) {
+        /**
+         * Scale: -1 is most condensed, 0 is normal, 1 is most spread apart
+         */
+        double width = [[traits objectForKey:NSFontWidthTrait] doubleValue];
+        int fcWidth;
 
-      width = MAX(-1, MIN(1, width));
-      if (width <= 0)
-	{
-	  fcWidth = FC_WIDTH_ULTRACONDENSED + ((width + 1.0) * (FC_WIDTH_NORMAL - FC_WIDTH_ULTRACONDENSED));
-	}
-      else
-	{
-	  fcWidth = FC_WIDTH_NORMAL + (width * (FC_WIDTH_ULTRAEXPANDED - FC_WIDTH_NORMAL));
-	}
-      FcPatternAddInteger(_pat, FC_WIDTH, fcWidth);
+        width = MAX(-1, MIN(1, width));
+        if (width <= 0) {
+            fcWidth = FC_WIDTH_ULTRACONDENSED + ((width + 1.0) * (FC_WIDTH_NORMAL - FC_WIDTH_ULTRACONDENSED));
+        } else {
+            fcWidth = FC_WIDTH_NORMAL + (width * (FC_WIDTH_ULTRAEXPANDED - FC_WIDTH_NORMAL));
+        }
+        FcPatternAddInteger(_pat, FC_WIDTH, fcWidth);
     }
 
-  if ([traits objectForKey: NSFontSlantTrait])
-    {
-      /**
-       * Scale: -1 is 30 degree counterclockwise slant, 0 is no slant, 1
-       * is 30 degree clockwise slant
-       */
-      double slant = [[traits objectForKey: NSFontSlantTrait] doubleValue];
+    if ([traits objectForKey:NSFontSlantTrait]) {
+        /**
+         * Scale: -1 is 30 degree counterclockwise slant, 0 is no slant, 1
+         * is 30 degree clockwise slant
+         */
+        double slant = [[traits objectForKey:NSFontSlantTrait] doubleValue];
 
-      // NOTE: Fontconfig can't express this as a scale
-      if (slant > 0)
-	{
-	  FcPatternAddInteger(_pat, FC_SLANT, FC_SLANT_ITALIC);
-	}
-      else
-	{
-	  FcPatternAddInteger(_pat, FC_SLANT, FC_SLANT_ROMAN);
-	}
+        // NOTE: Fontconfig can't express this as a scale
+        if (slant > 0) {
+            FcPatternAddInteger(_pat, FC_SLANT, FC_SLANT_ITALIC);
+        } else {
+            FcPatternAddInteger(_pat, FC_SLANT, FC_SLANT_ROMAN);
+        }
     }
 }
 
-- (void)addSize: (NSNumber*)size
+- (void)addSize:(NSNumber *)size
 {
-  FcPatternAddDouble(_pat, FC_SIZE, [size doubleValue]);
+    FcPatternAddDouble(_pat, FC_SIZE, [size doubleValue]);
 }
 
-- (void)addCharacterSet: (NSCharacterSet*)characterSet
+- (void)addCharacterSet:(NSCharacterSet *)characterSet
 {
-  if ([characterSet isKindOfClass: [FontconfigCharacterSet class]])
-    {
-      // Fast case
-      FcPatternAddCharSet(_pat, FC_CHARSET, [(FontconfigCharacterSet*)characterSet fontconfigCharSet]);
-    }
-  else
-    {
-      // Slow case
-      FcCharSet *fcSet = FcCharSetCreate();
-      uint32_t plane;
-      for (plane=0; plane<=16; plane++)
-	{
-	  if ([characterSet hasMemberInPlane: plane])
-	    {
-	      uint32_t codePoint;
-	      for (codePoint = plane<<16; codePoint <= 0xffff + (plane<<16); codePoint++)
-		{
-		  if ([characterSet longCharacterIsMember: codePoint])
-		    {
-		      FcCharSetAddChar(fcSet, codePoint);
-		    }
-		}
-	    }
-	}
-      
-      FcPatternAddCharSet(_pat, FC_CHARSET, fcSet);
-      FcCharSetDestroy(fcSet);
+    if ([characterSet isKindOfClass:[FontconfigCharacterSet class]]) {
+        // Fast case
+        FcPatternAddCharSet(_pat, FC_CHARSET, [(FontconfigCharacterSet *)characterSet fontconfigCharSet]);
+    } else {
+        // Slow case
+        FcCharSet *fcSet = FcCharSetCreate();
+        uint32_t plane;
+        for (plane = 0; plane <= 16; plane++) {
+            if ([characterSet hasMemberInPlane:plane]) {
+                uint32_t codePoint;
+                for (codePoint = plane << 16; codePoint <= 0xffff + (plane << 16); codePoint++) {
+                    if ([characterSet longCharacterIsMember:codePoint]) {
+                        FcCharSetAddChar(fcSet, codePoint);
+                    }
+                }
+            }
+        }
+
+        FcPatternAddCharSet(_pat, FC_CHARSET, fcSet);
+        FcCharSetDestroy(fcSet);
     }
 }
 
-#define ADD_TO_PATTERN(key, handlerMethod, valueClass)	\
-  do {							\
-    id value = [_attributes objectForKey: key];		\
-    if (value)						\
-      {							\
-	if ([value isKindOfClass: valueClass])		\
-	  {								\
-	    [self handlerMethod value];					\
-	  }								\
-	else								\
-	  {								\
-	    NSLog(@"NSFontDescriptor: Ignoring invalid value %@ for attribute %@", value, key);	\
-	  }								\
-      }									\
-  } while (0);
+#define ADD_TO_PATTERN(key, handlerMethod, valueClass)                                                             \
+    do {                                                                                                           \
+        id value = [_attributes objectForKey:key];                                                                 \
+        if (value) {                                                                                               \
+            if ([value isKindOfClass:valueClass]) {                                                                \
+                [self handlerMethod value];                                                                        \
+            } else {                                                                                               \
+                NSLog(@"NSFontDescriptor: Ignoring invalid value %@ for attribute %@", value, key);                \
+            }                                                                                                      \
+        }                                                                                                          \
+    } while (0);
 
 - (void)addAttributes
 {
-  ADD_TO_PATTERN(NSFontNameAttribute, addName:, [NSString class]);
-  ADD_TO_PATTERN(NSFontVisibleNameAttribute, addVisibleName:, [NSString class]);
-  ADD_TO_PATTERN(NSFontFamilyAttribute, addFamilyName:, [NSString class]);
-  ADD_TO_PATTERN(NSFontFaceAttribute, addStyleName:, [NSString class]);
-  ADD_TO_PATTERN(NSFontTraitsAttribute, addTraits:, [NSDictionary class]);
-  ADD_TO_PATTERN(NSFontSizeAttribute, addSize:, [NSNumber class]);
-  ADD_TO_PATTERN(NSFontCharacterSetAttribute, addCharacterSet:, [NSCharacterSet class]);
+    ADD_TO_PATTERN(NSFontNameAttribute, addName:, [NSString class]);
+    ADD_TO_PATTERN(NSFontVisibleNameAttribute, addVisibleName:, [NSString class]);
+    ADD_TO_PATTERN(NSFontFamilyAttribute, addFamilyName:, [NSString class]);
+    ADD_TO_PATTERN(NSFontFaceAttribute, addStyleName:, [NSString class]);
+    ADD_TO_PATTERN(NSFontTraitsAttribute, addTraits:, [NSDictionary class]);
+    ADD_TO_PATTERN(NSFontSizeAttribute, addSize:, [NSNumber class]);
+    ADD_TO_PATTERN(NSFontCharacterSetAttribute, addCharacterSet:, [NSCharacterSet class]);
 }
 
-- (FcPattern *)createPatternWithAttributes: (NSDictionary *)attributes
+- (FcPattern *)createPatternWithAttributes:(NSDictionary *)attributes
 {
-  _attributes = attributes;
-  _pat = FcPatternCreate();
-  [self addAttributes];
+    _attributes = attributes;
+    _pat = FcPatternCreate();
+    [self addAttributes];
 
-  return _pat;
+    return _pat;
 }
 
 @end
@@ -903,198 +786,169 @@ static NSArray *faFromFc(FcPattern *pat)
 
 @implementation FontconfigPatternParser
 
-- (NSString*)readFontconfigString: (const char *)key fromPattern: (FcPattern*)pat
+- (NSString *)readFontconfigString:(const char *)key fromPattern:(FcPattern *)pat
 {
-  unsigned char *string = NULL;
-  if (FcResultMatch == FcPatternGetString(pat, key, 0, &string))
-    {
-      if (string)
-	{
-	  return [NSString stringWithUTF8String: (const char *)string];
-	}
+    unsigned char *string = NULL;
+    if (FcResultMatch == FcPatternGetString(pat, key, 0, &string)) {
+        if (string) {
+            return [NSString stringWithUTF8String:(const char *)string];
+        }
     }
-  return nil;
+    return nil;
 }
 
-- (NSNumber*)readFontconfigInteger: (const char *)key fromPattern: (FcPattern*)pat
+- (NSNumber *)readFontconfigInteger:(const char *)key fromPattern:(FcPattern *)pat
 {
-  int value;
-  if (FcResultMatch == FcPatternGetInteger(pat, key, 0, &value))
-    {
-      return [NSNumber numberWithInt: value];
+    int value;
+    if (FcResultMatch == FcPatternGetInteger(pat, key, 0, &value)) {
+        return [NSNumber numberWithInt:value];
     }
-  return nil;
+    return nil;
 }
 
-- (NSNumber*)readFontconfigDouble: (const char *)key fromPattern: (FcPattern*)pat
+- (NSNumber *)readFontconfigDouble:(const char *)key fromPattern:(FcPattern *)pat
 {
-  double value;
-  if (FcResultMatch == FcPatternGetDouble(pat, key, 0, &value))
-    {
-      return [NSNumber numberWithDouble: value];
+    double value;
+    if (FcResultMatch == FcPatternGetDouble(pat, key, 0, &value)) {
+        return [NSNumber numberWithDouble:value];
     }
-  return nil;
+    return nil;
 }
 
 
 
-- (NSString*)readNameFromPattern: (FcPattern*)pat
+- (NSString *)readNameFromPattern:(FcPattern *)pat
 {
 #ifdef FC_POSTSCRIPT_NAME
-  NSString *name = [self readFontconfigString: FC_POSTSCRIPT_NAME fromPattern: pat];
+    NSString *name = [self readFontconfigString:FC_POSTSCRIPT_NAME fromPattern:pat];
 #endif
-  NSString *family = [self readFontconfigString: FC_FAMILY fromPattern: pat];
-  NSString *style = [self readFontconfigString: FC_STYLE fromPattern: pat];
+    NSString *family = [self readFontconfigString:FC_FAMILY fromPattern:pat];
+    NSString *style = [self readFontconfigString:FC_STYLE fromPattern:pat];
 
 #ifdef FC_POSTSCRIPT_NAME
-  if (name)
-    return name;
-  else
-#endif
-    if (style)
-      {
-        return [NSString stringWithFormat: @"%@-%@", family, style];
-      }
+    if (name)
+        return name;
     else
-      {
+#endif
+        if (style) {
+        return [NSString stringWithFormat:@"%@-%@", family, style];
+    } else {
         return family;
-      }
-}
-
-- (NSString*)readVisibleNameFromPattern: (FcPattern*)pat
-{
-  // FIXME: try to get the localized one
-  return [self readFontconfigString: FC_FULLNAME fromPattern: pat];
-}
-- (NSString*)readFamilyNameFromPattern: (FcPattern*)pat
-{
-  // FIXME: try to get the localized one
-  return [self readFontconfigString: FC_FAMILY fromPattern: pat];
-}
-- (NSString*)readStyleNameFromPattern: (FcPattern*)pat
-{
-  // FIXME: try to get the localized one
-  return [self readFontconfigString: FC_STYLE fromPattern: pat];
-}
-- (NSDictionary*)readTraitsFromPattern: (FcPattern*)pat
-{
-  NSMutableDictionary *traits = [NSMutableDictionary dictionary];
-
-  NSFontSymbolicTraits symTraits = 0;
-
-  int value;
-  if (FcResultMatch == FcPatternGetInteger(pat, FC_SLANT, 0, &value))
-    {
-      if (value > FC_SLANT_ROMAN)
-	{
-	  symTraits |= NSFontItalicTrait;
-	}
     }
-  if (FcResultMatch == FcPatternGetInteger(pat, FC_WEIGHT, 0, &value))
-    {
-      double weight;
+}
 
-      if (value >= FC_WEIGHT_BOLD)
-	{
-	  symTraits |= NSFontBoldTrait;
-	}
+- (NSString *)readVisibleNameFromPattern:(FcPattern *)pat
+{
+    // FIXME: try to get the localized one
+    return [self readFontconfigString:FC_FULLNAME fromPattern:pat];
+}
+- (NSString *)readFamilyNameFromPattern:(FcPattern *)pat
+{
+    // FIXME: try to get the localized one
+    return [self readFontconfigString:FC_FAMILY fromPattern:pat];
+}
+- (NSString *)readStyleNameFromPattern:(FcPattern *)pat
+{
+    // FIXME: try to get the localized one
+    return [self readFontconfigString:FC_STYLE fromPattern:pat];
+}
+- (NSDictionary *)readTraitsFromPattern:(FcPattern *)pat
+{
+    NSMutableDictionary *traits = [NSMutableDictionary dictionary];
 
-      if (value <= FC_WEIGHT_NORMAL)
-	{
-	  weight = ((value - FC_WEIGHT_THIN) / (double)(FC_WEIGHT_NORMAL - FC_WEIGHT_THIN)) - 1.0;
-	}
-      else
-	{
-	  weight = (value - FC_WEIGHT_NORMAL) / (double)(FC_WEIGHT_ULTRABLACK - FC_WEIGHT_NORMAL);
-	}
+    NSFontSymbolicTraits symTraits = 0;
 
-      [traits setObject: [NSNumber numberWithDouble: weight]
-		 forKey: NSFontWeightTrait];
+    int value;
+    if (FcResultMatch == FcPatternGetInteger(pat, FC_SLANT, 0, &value)) {
+        if (value > FC_SLANT_ROMAN) {
+            symTraits |= NSFontItalicTrait;
+        }
     }
-  if (FcResultMatch == FcPatternGetInteger(pat, FC_WIDTH, 0, &value))
-    {
-      double width;
+    if (FcResultMatch == FcPatternGetInteger(pat, FC_WEIGHT, 0, &value)) {
+        double weight;
 
-      if (value >= FC_WIDTH_EXPANDED)
-	{
-	  symTraits |= NSFontExpandedTrait;
-	}
-      if (value <= FC_WIDTH_CONDENSED)
-	{
-	  symTraits |= NSFontCondensedTrait;
-	}
+        if (value >= FC_WEIGHT_BOLD) {
+            symTraits |= NSFontBoldTrait;
+        }
 
-      if (value <= FC_WIDTH_NORMAL)
-	{
-	  width = ((value - FC_WIDTH_ULTRACONDENSED) / (double)(FC_WIDTH_NORMAL - FC_WIDTH_ULTRACONDENSED)) - 1.0;
-	}
-      else
-	{
-	  width = (value - FC_WIDTH_NORMAL) / (double)(FC_WIDTH_ULTRAEXPANDED - FC_WIDTH_NORMAL);
-	}
+        if (value <= FC_WEIGHT_NORMAL) {
+            weight = ((value - FC_WEIGHT_THIN) / (double)(FC_WEIGHT_NORMAL - FC_WEIGHT_THIN)) - 1.0;
+        } else {
+            weight = (value - FC_WEIGHT_NORMAL) / (double)(FC_WEIGHT_ULTRABLACK - FC_WEIGHT_NORMAL);
+        }
 
-      [traits setObject: [NSNumber numberWithDouble: width]
-		 forKey: NSFontWidthTrait];
+        [traits setObject:[NSNumber numberWithDouble:weight] forKey:NSFontWeightTrait];
     }
-  if (FcResultMatch == FcPatternGetInteger(pat, FC_SPACING, 0, &value))
-    {
-      if (value == FC_MONO || value == FC_CHARCELL)
-	{
-	  symTraits |= NSFontMonoSpaceTrait;
-	}
+    if (FcResultMatch == FcPatternGetInteger(pat, FC_WIDTH, 0, &value)) {
+        double width;
+
+        if (value >= FC_WIDTH_EXPANDED) {
+            symTraits |= NSFontExpandedTrait;
+        }
+        if (value <= FC_WIDTH_CONDENSED) {
+            symTraits |= NSFontCondensedTrait;
+        }
+
+        if (value <= FC_WIDTH_NORMAL) {
+            width = ((value - FC_WIDTH_ULTRACONDENSED) / (double)(FC_WIDTH_NORMAL - FC_WIDTH_ULTRACONDENSED)) - 1.0;
+        } else {
+            width = (value - FC_WIDTH_NORMAL) / (double)(FC_WIDTH_ULTRAEXPANDED - FC_WIDTH_NORMAL);
+        }
+
+        [traits setObject:[NSNumber numberWithDouble:width] forKey:NSFontWidthTrait];
+    }
+    if (FcResultMatch == FcPatternGetInteger(pat, FC_SPACING, 0, &value)) {
+        if (value == FC_MONO || value == FC_CHARCELL) {
+            symTraits |= NSFontMonoSpaceTrait;
+        }
     }
 
-  if (symTraits != 0)
-    {
-      [traits setObject: [NSNumber numberWithUnsignedInt: symTraits]
-		 forKey: NSFontSymbolicTrait];
+    if (symTraits != 0) {
+        [traits setObject:[NSNumber numberWithUnsignedInt:symTraits] forKey:NSFontSymbolicTrait];
     }
 
-  return traits;
+    return traits;
 }
 
-- (NSNumber*)readSizeFromPattern: (FcPattern*)pat
+- (NSNumber *)readSizeFromPattern:(FcPattern *)pat
 {
-  return [self readFontconfigDouble: FC_SIZE fromPattern: pat];
+    return [self readFontconfigDouble:FC_SIZE fromPattern:pat];
 }
 
-- (NSCharacterSet*)readCharacterSetFromPattern: (FcPattern*)pat
+- (NSCharacterSet *)readCharacterSetFromPattern:(FcPattern *)pat
 {
-  FcCharSet *value;
-  if (FcResultMatch == FcPatternGetCharSet(pat, FC_CHARSET, 0, &value))
-    {
-      return [[[FontconfigCharacterSet alloc] initWithFontconfigCharSet: value] autorelease];
+    FcCharSet *value;
+    if (FcResultMatch == FcPatternGetCharSet(pat, FC_CHARSET, 0, &value)) {
+        return [[[FontconfigCharacterSet alloc] initWithFontconfigCharSet:value] autorelease];
     }
-  return nil;
+    return nil;
 }
 
-#define READ_FROM_PATTERN(key, readMethod)	\
-  do {						\
-    id result = [self readMethod _pat];		\
-    if (result != nil)				\
-      {						\
-	[_attributes setObject: result		\
-			forKey: key];		\
-      }						\
-  } while (0);
+#define READ_FROM_PATTERN(key, readMethod)                                                                         \
+    do {                                                                                                           \
+        id result = [self readMethod _pat];                                                                        \
+        if (result != nil) {                                                                                       \
+            [_attributes setObject:result forKey:key];                                                             \
+        }                                                                                                          \
+    } while (0);
 
 - (void)parseAttributes
 {
-  READ_FROM_PATTERN(NSFontNameAttribute, readNameFromPattern:);
-  READ_FROM_PATTERN(NSFontVisibleNameAttribute, readVisibleNameFromPattern:);
-  READ_FROM_PATTERN(NSFontFamilyAttribute, readFamilyNameFromPattern:);
-  READ_FROM_PATTERN(NSFontFaceAttribute, readStyleNameFromPattern:);
-  READ_FROM_PATTERN(NSFontTraitsAttribute, readTraitsFromPattern:);
-  READ_FROM_PATTERN(NSFontSizeAttribute, readSizeFromPattern:);
-  READ_FROM_PATTERN(NSFontCharacterSetAttribute, readCharacterSetFromPattern:);
+    READ_FROM_PATTERN(NSFontNameAttribute, readNameFromPattern:);
+    READ_FROM_PATTERN(NSFontVisibleNameAttribute, readVisibleNameFromPattern:);
+    READ_FROM_PATTERN(NSFontFamilyAttribute, readFamilyNameFromPattern:);
+    READ_FROM_PATTERN(NSFontFaceAttribute, readStyleNameFromPattern:);
+    READ_FROM_PATTERN(NSFontTraitsAttribute, readTraitsFromPattern:);
+    READ_FROM_PATTERN(NSFontSizeAttribute, readSizeFromPattern:);
+    READ_FROM_PATTERN(NSFontCharacterSetAttribute, readCharacterSetFromPattern:);
 }
 
-- (NSDictionary*)attributesFromPattern: (FcPattern *)pat
+- (NSDictionary *)attributesFromPattern:(FcPattern *)pat
 {
-  _attributes = [NSMutableDictionary dictionary];
-  _pat = pat;
-  [self parseAttributes];
-  return _attributes;
+    _attributes = [NSMutableDictionary dictionary];
+    _pat = pat;
+    [self parseAttributes];
+    return _attributes;
 }
 
 @end
@@ -1103,40 +957,38 @@ static NSArray *faFromFc(FcPattern *pat)
 
 @implementation FontconfigCharacterSet
 
-- (id)initWithFontconfigCharSet: (FcCharSet*)charset
+- (id)initWithFontconfigCharSet:(FcCharSet *)charset
 {
-  if ((self = [super init]))
-    {
-      _charset = FcCharSetCopy(charset);
+    if ((self = [super init])) {
+        _charset = FcCharSetCopy(charset);
     }
-  return self;
+    return self;
 }
 
-- (id)mutableCopyWithZone: (NSZone*)aZone
+- (id)mutableCopyWithZone:(NSZone *)aZone
 {
-  return [[NSMutableCharacterSet characterSetWithBitmapRepresentation: 
-				   [self bitmapRepresentation]] retain];
+    return [[NSMutableCharacterSet characterSetWithBitmapRepresentation:[self bitmapRepresentation]] retain];
 }
 
 - (void)dealloc
 {
-  FcCharSetDestroy(_charset);
-  [super dealloc];
+    FcCharSetDestroy(_charset);
+    [super dealloc];
 }
 
-- (FcCharSet*)fontconfigCharSet
+- (FcCharSet *)fontconfigCharSet
 {
-  return _charset;
+    return _charset;
 }
 
-- (BOOL)characterIsMember: (unichar)c
+- (BOOL)characterIsMember:(unichar)c
 {
-  return FcCharSetHasChar(_charset, c);
+    return FcCharSetHasChar(_charset, c);
 }
 
-- (BOOL)longCharacterIsMember: (UTF32Char)c
+- (BOOL)longCharacterIsMember:(UTF32Char)c
 {
-  return FcCharSetHasChar(_charset, c);
+    return FcCharSetHasChar(_charset, c);
 }
 
 // FIXME: Implement for better performance
@@ -1145,4 +997,3 @@ static NSArray *faFromFc(FcPattern *pat)
 //}
 
 @end
-

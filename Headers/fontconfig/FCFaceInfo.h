@@ -8,7 +8,7 @@
    Base on code by Alexander Malmberg <alexander@malmberg.org>
    Rewrite: Fred Kiefer <fredkiefer@gmx.de>
    Date: Jan 2006
- 
+
    This file is part of GNUstep.
 
    This library is free software; you can redistribute it and/or
@@ -23,8 +23,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -32,44 +32,44 @@
 #define FCFACEINFO_H
 
 #include <Foundation/Foundation.h>
-#include <ft2build.h>  
+#include <ft2build.h>
 #include FT_FREETYPE_H
 #include <fontconfig/fontconfig.h>
 
 @interface FCFaceInfo : NSObject
 {
-	int _weight;
-	unsigned int _traits;
+    int _weight;
+    unsigned int _traits;
 
-	FcPattern *_pattern;
+    FcPattern *_pattern;
 
-	NSString *_familyName;
-	NSCharacterSet *_characterSet;
-	BOOL _hasNoCharacterSet;
-	BOOL _patternIsResolved;
+    NSString *_familyName;
+    NSCharacterSet *_characterSet;
+    BOOL _hasNoCharacterSet;
+    BOOL _patternIsResolved;
 }
 
-- (id) initWithfamilyName: (NSString *)familyName 
-                   weight: (int)weight 
-                   traits: (unsigned int)traits 
-                  pattern: (FcPattern *)pattern;
+- (id)initWithfamilyName:(NSString *)familyName
+                  weight:(int)weight
+                  traits:(unsigned int)traits
+                 pattern:(FcPattern *)pattern;
 
-- (unsigned int) cacheSize;
+- (unsigned int)cacheSize;
 
-- (int) weight;
-- (void) setWeight: (int)weight;
-- (unsigned int) traits;
-- (void) setTraits: (unsigned int)traits;
+- (int)weight;
+- (void)setWeight:(int)weight;
+- (unsigned int)traits;
+- (void)setTraits:(unsigned int)traits;
 
-- (NSString *) familyName;
-- (void) setFamilyName: (NSString *)name;
+- (NSString *)familyName;
+- (void)setFamilyName:(NSString *)name;
 
-- (NSString *) displayName;
+- (NSString *)displayName;
 
-- (void *) fontFace;
-- (FcPattern *) matchedPattern;
+- (void *)fontFace;
+- (FcPattern *)matchedPattern;
 
-- (NSCharacterSet*)characterSet;
+- (NSCharacterSet *)characterSet;
 
 @end
 #endif

@@ -4,7 +4,7 @@
 
    Written by:  Adam Fedor <fedor@gnu.org>
    Date: Sep 2002
-   
+
    This file is part of the GNU Objective C User Interface Library.
 
    This library is free software; you can redistribute it and/or
@@ -19,8 +19,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -38,71 +38,71 @@
 @implementation GSStreamGState
 
 /* Designated initializer. */
-- initWithDrawContext: (GSContext *)drawContext
+- initWithDrawContext:(GSContext *)drawContext
 {
-  [super initWithDrawContext: drawContext];
+    [super initWithDrawContext:drawContext];
 
-  clinecap = 0;
-  clinejoin = 0;
-  clinewidth = 0;
-  cmiterlimit = 0;
-  cstrokeadjust = 0;
-  return self;
+    clinecap = 0;
+    clinejoin = 0;
+    clinewidth = 0;
+    cmiterlimit = 0;
+    cstrokeadjust = 0;
+    return self;
 }
 
-- (void) DPScurrentlinecap: (int*)linecap
+- (void)DPScurrentlinecap:(int *)linecap
 {
-  if (linecap)
-    *linecap = clinecap;
+    if (linecap)
+        *linecap = clinecap;
 }
 
-- (void) DPScurrentlinejoin: (int*)linejoin
+- (void)DPScurrentlinejoin:(int *)linejoin
 {
-  if (linejoin)
-    *linejoin = clinejoin;
+    if (linejoin)
+        *linejoin = clinejoin;
 }
 
-- (void) DPScurrentlinewidth: (CGFloat*)width
+- (void)DPScurrentlinewidth:(CGFloat *)width
 {
-  if (width)
-    *width = clinewidth;
+    if (width)
+        *width = clinewidth;
 }
 
-- (void) DPScurrentmiterlimit: (CGFloat*)limit
+- (void)DPScurrentmiterlimit:(CGFloat *)limit
 {
-  if (limit)
-    *limit = cmiterlimit;
+    if (limit)
+        *limit = cmiterlimit;
 }
 
-- (void) DPScurrentstrokeadjust: (int*)b
+- (void)DPScurrentstrokeadjust:(int *)b
 {
-  if (b)
-    *b = cstrokeadjust;
+    if (b)
+        *b = cstrokeadjust;
 }
 
-- (void) DPSsetlinecap: (int)linecap
+- (void)DPSsetlinecap:(int)linecap
 {
-  clinecap = linecap;
+    clinecap = linecap;
 }
 
-- (void) DPSsetlinejoin: (int)linejoin
+- (void)DPSsetlinejoin:(int)linejoin
 {
-  clinejoin = linejoin;
+    clinejoin = linejoin;
 }
 
-- (void) DPSsetlinewidth: (CGFloat)width
+- (void)DPSsetlinewidth:(CGFloat)width
 {
-  clinewidth = width;
+    clinewidth = width;
 }
 
-- (void) DPSsetmiterlimit: (CGFloat)limit
+- (void)DPSsetmiterlimit:(CGFloat)limit
 {
-  cmiterlimit = limit;
+    cmiterlimit = limit;
 }
 
-- (void) DPSsetstrokeadjust: (int)b
+- (void)DPSsetstrokeadjust:(int)b
 {
-  cstrokeadjust = b;
+    cstrokeadjust = b;
 }
 
 @end

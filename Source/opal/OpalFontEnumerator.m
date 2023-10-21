@@ -1,11 +1,11 @@
 /*
    OpalFontEnumerator.m
- 
+
    Copyright (C) 2013 Free Software Foundation, Inc.
 
    Author: Ivan Vucica <ivan@vucica.net>
    Date: September 2013
- 
+
    This file is part of GNUstep.
 
    This library is free software; you can redistribute it and/or
@@ -20,25 +20,24 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
 #import "opal/OpalFontEnumerator.h"
 #import "opal/OpalFontInfo.h"
 
-@implementation OpalFontEnumerator 
+@implementation OpalFontEnumerator
 
-+ (Class) faceInfoClass
++ (Class)faceInfoClass
 {
-  return [OpalFaceInfo class];
+    return [OpalFaceInfo class];
 }
 
-+ (OpalFaceInfo *) fontWithName: (NSString *) name
++ (OpalFaceInfo *)fontWithName:(NSString *)name
 {
-  return (OpalFaceInfo *) [super fontWithName: name];
+    return (OpalFaceInfo *)[super fontWithName:name];
 }
 
 @end
-

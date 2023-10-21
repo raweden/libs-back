@@ -33,7 +33,8 @@
 #import <CoreGraphics/CGImage.h>
 #import <objc/runtime.h>
 
-@implementation NSColor (GSQuartz)
+@implementation
+NSColor (GSQuartz)
 /*
  * FIXME:
  * NOTE 1: GNUstep-GUI does not allow an NSColor to be created with a custom
@@ -45,72 +46,72 @@
  */
 - (CGColorRef)CGColor
 {
-  NSString *name = [self colorSpaceName];
-  
-  // FIXME: we should handle black color spaces here, which we currently
-  // ignore in the implementation.
-  CFStringRef cgColorSpaceName = NULL;
-  if ([name isEqualToString: NSCalibratedRGBColorSpace]
-    || [name isEqualToString: NSDeviceRGBColorSpace])
-    cgColorSpaceName = kCGColorSpaceSRGB;
-  else if ([name isEqualToString: NSCalibratedBlackColorSpace]
-    || [name isEqualToString: NSCalibratedWhiteColorSpace]
-    || [name isEqualToString: NSDeviceBlackColorSpace]
-    || [name isEqualToString: NSDeviceWhiteColorSpace])
-    cgColorSpaceName = kCGColorSpaceGenericGray;
-  else if ([name isEqualToString: NSDeviceCMYKColorSpace])
-    cgColorSpaceName = kCGColorSpaceGenericCMYK;
-  else if ([name isEqualToString: NSNamedColorSpace])
-    return [[self colorUsingColorSpaceName: NSDeviceRGBColorSpace] CGColor];
+    NSString *name = [self colorSpaceName];
 
-  if (cgColorSpaceName == NULL)
+    // FIXME: we should handle black color spaces here, which we currently
+    // ignore in the implementation.
+    CFStringRef cgColorSpaceName = NULL;
+    if ([name isEqualToString:NSCalibratedRGBColorSpace] || [name isEqualToString:NSDeviceRGBColorSpace])
+        cgColorSpaceName = kCGColorSpaceSRGB;
+    else if ([name isEqualToString:NSCalibratedBlackColorSpace] ||
+             [name isEqualToString:NSCalibratedWhiteColorSpace] || [name isEqualToString:NSDeviceBlackColorSpace] ||
+             [name isEqualToString:NSDeviceWhiteColorSpace])
+        cgColorSpaceName = kCGColorSpaceGenericGray;
+    else if ([name isEqualToString:NSDeviceCMYKColorSpace])
+        cgColorSpaceName = kCGColorSpaceGenericCMYK;
+    else if ([name isEqualToString:NSNamedColorSpace])
+        return [[self colorUsingColorSpaceName:NSDeviceRGBColorSpace] CGColor];
+
+    if (cgColorSpaceName == NULL)
+        return NULL;
+
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(cgColorSpaceName);
+    CGFloat values[10];
+    [self getComponents:values];
+
+    CGColorRef color = CGColorCreate(colorSpace, values);
+    CFRelease(colorSpace);
+
+    return (CGColorRef)[(id)color autorelease];
+}
+@end
+
+@implementation
+NSImageRep (GSQuartz)
+- (CGImageRef)CGImageForProposedRect:(NSRect *)proposedDestRect
+                             context:(NSGraphicsContext *)referenceContext
+                               hints:(NSDictionary *)hints
+{
+    /*
+     * FIXME Must implement this.
+     * A note for future implementors:
+      > Apparently each NSImageRep subclass implements this method, with the
+      > base implementation being[1], as I understand it (which may be wrong):
+      > i. create a new blank context with *proposedDestRect.size and set it
+      > as the current context. This context should theoretically be
+      > constructed with properties extracted from `referenceContext` and/or
+      > `hints`, although I suppose our first implementation can go without
+      > that.
+      > ii. call [self draw];
+      > iii. adjust *proposedDestRect to round half-pixels
+      > iv. extract a CGImage from the bitmap context
+      > If NSImage.size == *proposedDestRect.size, we should just CGImageCreate
+      > directly from our representation data.
+     */
+
     return NULL;
-
-  CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(cgColorSpaceName);
-  CGFloat values[10];
-  [self getComponents: values];
-
-  CGColorRef color = CGColorCreate(colorSpace, values);
-  CFRelease(colorSpace);
-
-  return (CGColorRef)[(id)color autorelease];
 }
 @end
 
-@implementation NSImageRep (GSQuartz)
-- (CGImageRef)CGImageForProposedRect: (NSRect *)proposedDestRect 
-                             context: (NSGraphicsContext *)referenceContext 
-                               hints: (NSDictionary *)hints
+@implementation
+NSImage (GSQuartz)
+- (CGImageRef)CGImageForProposedRect:(NSRect *)proposedDestRect
+                             context:(NSGraphicsContext *)referenceContext
+                               hints:(NSDictionary *)hints
 {
-  /*
-   * FIXME Must implement this.
-   * A note for future implementors:
-    > Apparently each NSImageRep subclass implements this method, with the
-    > base implementation being[1], as I understand it (which may be wrong):
-    > i. create a new blank context with *proposedDestRect.size and set it
-    > as the current context. This context should theoretically be
-    > constructed with properties extracted from `referenceContext` and/or
-    > `hints`, although I suppose our first implementation can go without
-    > that.
-    > ii. call [self draw];
-    > iii. adjust *proposedDestRect to round half-pixels
-    > iv. extract a CGImage from the bitmap context
-    > If NSImage.size == *proposedDestRect.size, we should just CGImageCreate
-    > directly from our representation data.
-   */
-
-  return NULL;
-}
-@end
-
-@implementation NSImage (GSQuartz)
-- (CGImageRef)CGImageForProposedRect: (NSRect *)proposedDestRect 
-                             context: (NSGraphicsContext *)referenceContext 
-                               hints: (NSDictionary *)hints
-{
-  // FIXME: Must implement this.
-  // This should pick the best NSImageRep for this NSImage and call
-  // -[NSImageRep CGImageForProposedRect:...].
-  return NULL;
+    // FIXME: Must implement this.
+    // This should pick the best NSImageRep for this NSImage and call
+    // -[NSImageRep CGImageForProposedRect:...].
+    return NULL;
 }
 @end

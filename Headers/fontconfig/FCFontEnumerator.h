@@ -19,8 +19,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -37,33 +37,33 @@
 @interface FCFontEnumerator : GSFontEnumerator
 {
 }
-+ (Class) faceInfoClass;
-+ (FCFaceInfo *) fontWithName: (NSString *)name;
++ (Class)faceInfoClass;
++ (FCFaceInfo *)fontWithName:(NSString *)name;
 @end
 
 @interface FontconfigPatternGenerator : NSObject
 {
-  NSDictionary *_attributes;
-  FcPattern *_pat;
+    NSDictionary *_attributes;
+    FcPattern *_pat;
 }
-- (FcPattern *)createPatternWithAttributes: (NSDictionary *)attributes;
+- (FcPattern *)createPatternWithAttributes:(NSDictionary *)attributes;
 @end
 
 @interface FontconfigPatternParser : NSObject
 {
-  NSMutableDictionary *_attributes;
-  FcPattern *_pat;
+    NSMutableDictionary *_attributes;
+    FcPattern *_pat;
 }
-- (NSDictionary*)attributesFromPattern: (FcPattern *)pat;
+- (NSDictionary *)attributesFromPattern:(FcPattern *)pat;
 @end
 
 @interface FontconfigCharacterSet : NSCharacterSet
 {
-  FcCharSet *_charset;
+    FcCharSet *_charset;
 }
 
-- (id)initWithFontconfigCharSet: (FcCharSet*)charset;
-- (FcCharSet*)fontconfigCharSet;
+- (id)initWithFontconfigCharSet:(FcCharSet *)charset;
+- (FcCharSet *)fontconfigCharSet;
 
 @end
 

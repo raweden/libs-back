@@ -6,7 +6,7 @@
    Author:  Alexander Malmberg <alexander@malmberg.org>
    Author: Fred Kiefer <fredkiefer@gmx.de>
    Extracted into separate class.
-   
+
    This file is part of GNUstep.
 
    This library is free software; you can redistribute it and/or
@@ -21,8 +21,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -33,35 +33,35 @@
 
 @interface GSFunction : NSObject
 {
-  /* General information about the function. */
-  int num_in, num_out;
+    /* General information about the function. */
+    int num_in, num_out;
 
-  double *domain; /* num_in * 2 */
-  double *range; /* num_out * 2 */
+    double *domain; /* num_in * 2 */
+    double *range;  /* num_out * 2 */
 
-  /* Type specific information */
-  const unsigned char *data_source;
-  int *size; /* num_in */
-  int bits_per_sample;
-  double *encode; /* num_in * 2 */
-  double *decode; /* num_out * 2 */
+    /* Type specific information */
+    const unsigned char *data_source;
+    int *size; /* num_in */
+    int bits_per_sample;
+    double *encode; /* num_in * 2 */
+    double *decode; /* num_out * 2 */
 }
 
-- (id) initWith: (NSDictionary *)d;
-- (double) getsample: (int)sample : (int) i;
-- (void) eval: (double *)inValues : (double *)outValues;
+- (id)initWith:(NSDictionary *)d;
+- (double)getsample:(int)sample:(int)i;
+- (void)eval:(double *)inValues:(double *)outValues;
 
 @end
 
 @interface GSFunction2in3out : GSFunction
 {
-  /* sample cache for in == 2, out == 3 */
-  int sample_index[2];
-  double sample_cache[4][3];
+    /* sample cache for in == 2, out == 3 */
+    int sample_index[2];
+    double sample_cache[4][3];
 }
 
-- (NSRect) affectedRect;
+- (NSRect)affectedRect;
 
 @end
 
-#endif // _GSFunction_h_INCLUDE
+#endif  // _GSFunction_h_INCLUDE

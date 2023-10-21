@@ -20,8 +20,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -30,18 +30,18 @@
 
 @interface OpalSurface : NSObject
 {
-  struct _gswindow_device_t * _gsWindowDevice;
-  CGContextRef _backingCGContext;
-  CGContextRef _x11CGContext;
+    struct _gswindow_device_t *_gsWindowDevice;
+    CGContextRef _backingCGContext;
+    CGContextRef _x11CGContext;
 }
 
-- (id) initWithDevice: (void *)device context: (CGContextRef)ctx;
+- (id)initWithDevice:(void *)device context:(CGContextRef)ctx;
 - (void *)device;
-- (CGContextRef) CGContext;
-- (NSSize) size;
+- (CGContextRef)CGContext;
+- (NSSize)size;
 
-- (CGContextRef) backingCGContext;
-- (CGContextRef) x11CGContext;
-- (void) handleExposeRect: (NSRect)rect;
-- (BOOL) isDrawingToScreen;
+- (CGContextRef)backingCGContext;
+- (CGContextRef)x11CGContext;
+- (void)handleExposeRect:(NSRect)rect;
+- (BOOL)isDrawingToScreen;
 @end

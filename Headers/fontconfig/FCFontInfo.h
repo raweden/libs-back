@@ -20,8 +20,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -33,18 +33,18 @@
 
 @interface FCFontInfo : GSFontInfo
 {
-@public
-	FCFaceInfo *_faceInfo;
-	BOOL _screenFont;
-	CGFloat lineHeight;
+    @public
+    FCFaceInfo *_faceInfo;
+    BOOL _screenFont;
+    CGFloat lineHeight;
 
-	unsigned int _cacheSize;
-	unsigned int *_cachedGlyphs;
-	NSSize *_cachedSizes;
+    unsigned int _cacheSize;
+    unsigned int *_cachedGlyphs;
+    NSSize *_cachedSizes;
 }
 
-- (void) setCacheSize:(unsigned int)size;
-- (BOOL) setupAttributes;
+- (void)setCacheSize:(unsigned int)size;
+- (BOOL)setupAttributes;
 @end
 
 #endif

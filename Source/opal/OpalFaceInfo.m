@@ -1,11 +1,11 @@
 /*
    OpalFaceInfo.m
- 
+
    Copyright (C) 2013 Free Software Foundation, Inc.
 
    Author: Ivan Vucica <ivan@vucica.net>
    Date: September 2013
- 
+
    This file is part of GNUstep.
 
    This library is free software; you can redistribute it and/or
@@ -20,43 +20,40 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
 #import "opal/OpalFaceInfo.h"
 
-@implementation OpalFaceInfo 
+@implementation OpalFaceInfo
 
-- (void) dealloc
+- (void)dealloc
 {
-  if (_fontFace)
-    {
-      CGFontRelease(_fontFace);
+    if (_fontFace) {
+        CGFontRelease(_fontFace);
     }
-  [super dealloc];
+    [super dealloc];
 }
 
 - (void *)fontFace
 {
-  if (!_fontFace)
-    {
-      FcPattern *resolved;
+    if (!_fontFace) {
+        FcPattern *resolved;
 
-      resolved = [self matchedPattern];
+        resolved = [self matchedPattern];
 
-      _fontFace = OPFontCreateWithFcPattern(resolved);
-      FcPatternDestroy(resolved);
+        _fontFace = OPFontCreateWithFcPattern(resolved);
+        FcPatternDestroy(resolved);
 
-      if (!_fontFace)
-        {
-          NSLog(@"Creating a font face failed %@", _familyName);
-          return NULL;
+        if (!_fontFace) {
+            NSLog(@"Creating a font face failed %@", _familyName);
+            return NULL;
         }
     }
 
-  return _fontFace;
+    return _fontFace;
 }
 
 @end

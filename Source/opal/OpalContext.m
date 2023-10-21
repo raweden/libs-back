@@ -37,54 +37,54 @@
 #define OGSTATE ((OpalGState *)gstate)
 
 #if BUILD_SERVER == SERVER_x11
-#  import "x11/XGServerWindow.h"
-#  import "x11/XWindowBuffer.h"
+#import "x11/XGServerWindow.h"
+#import "x11/XWindowBuffer.h"
 #endif
 
 @implementation OpalContext
 
-+ (void) initializeBackend
++ (void)initializeBackend
 {
-  [NSGraphicsContext setDefaultContextClass: self];
+    [NSGraphicsContext setDefaultContextClass:self];
 
-  [GSFontEnumerator setDefaultClass: [OpalFontEnumerator class]];
-  [GSFontInfo setDefaultClass: [OpalFontInfo class]];
+    [GSFontEnumerator setDefaultClass:[OpalFontEnumerator class]];
+    [GSFontInfo setDefaultClass:[OpalFontInfo class]];
 }
 
-+ (Class) GStateClass
++ (Class)GStateClass
 {
-  return [OpalGState class];
+    return [OpalGState class];
 }
 
-- (BOOL) supportsDrawGState
+- (BOOL)supportsDrawGState
 {
-  return YES;
+    return YES;
 }
 
-- (BOOL) isDrawingToScreen
+- (BOOL)isDrawingToScreen
 {
 #warning isDrawingToScreen returning NO to fix DPSimage
-  return NO;
+    return NO;
 
-  // NOTE: This was returning NO because it was not looking at the
-  // return value of GSCurrentSurface. Now it returns YES, which
-  // seems to have broken image drawing (yellow rectangles are drawn instead)
-  OpalSurface *surface;
+    // NOTE: This was returning NO because it was not looking at the
+    // return value of GSCurrentSurface. Now it returns YES, which
+    // seems to have broken image drawing (yellow rectangles are drawn instead)
+    OpalSurface *surface;
 
-  [OGSTATE GSCurrentSurface: &surface : NULL : NULL];
+    [OGSTATE GSCurrentSurface:&surface:NULL:NULL];
 
-  return [surface isDrawingToScreen];
+    return [surface isDrawingToScreen];
 }
 
-- (void) flushGraphics
+- (void)flushGraphics
 {
-  NSDebugLLog(@"OpalContext", @"%p (%@): %s", self, [self class], __PRETTY_FUNCTION__);
-  OpalSurface *surface;
+    NSDebugLLog(@"OpalContext", @"%p (%@): %s", self, [self class], __PRETTY_FUNCTION__);
+    OpalSurface *surface;
 
-  [OGSTATE GSCurrentSurface: &surface : NULL : NULL];
+    [OGSTATE GSCurrentSurface:&surface:NULL:NULL];
 
-  CGContextFlush([surface CGContext]);
-  //[surface handleExposeRect: [surface size]];
+    CGContextFlush([surface CGContext]);
+    //[surface handleExposeRect: [surface size]];
 }
 
 /* Private backend methods */
@@ -92,164 +92,147 @@
   This handles 'expose' event notifications that arrive from
   X11.
  */
-+ (void) handleExposeRect: (NSRect)rect forDriver: (void *)driver
++ (void)handleExposeRect:(NSRect)rect forDriver:(void *)driver
 {
-  if ([(id)driver isKindOfClass: [OpalSurface class]])
-    {
-      [(OpalSurface *)driver handleExposeRect: rect];
+    if ([(id)driver isKindOfClass:[OpalSurface class]]) {
+        [(OpalSurface *)driver handleExposeRect:rect];
     }
 }
 
 
 #if BUILD_SERVER == SERVER_x11
 #ifdef XSHM
-+ (void) _gotShmCompletion: (Drawable)d
++ (void)_gotShmCompletion:(Drawable)d
 {
-  [XWindowBuffer _gotShmCompletion: d];
+    [XWindowBuffer _gotShmCompletion:d];
 }
 
-- (void) gotShmCompletion: (Drawable)d
+- (void)gotShmCompletion:(Drawable)d
 {
-  [XWindowBuffer _gotShmCompletion: d];
+    [XWindowBuffer _gotShmCompletion:d];
 }
-#endif // XSHM
-#endif // BUILD_SERVER = SERVER_x11
+#endif  // XSHM
+#endif  // BUILD_SERVER = SERVER_x11
 
-- (id) initWithGraphicsPort: (void *)port
-                    flipped: (BOOL)flag;
+- (id)initWithGraphicsPort:(void *)port flipped:(BOOL)flag;
 {
-  self = [super initWithGraphicsPort: port
-                             flipped: flag];
-  if (self != nil)
-    {
-      [self GSSetDevice: NULL : -1 : -1];
+    self = [super initWithGraphicsPort:port flipped:flag];
+    if (self != nil) {
+        [self GSSetDevice:NULL:-1:-1];
     }
-  return self;
+    return self;
 }
 
 @end
 
-@implementation OpalContext (Ops)
+@implementation
+OpalContext (Ops)
 
-- (BOOL) isCompatibleBitmap: (NSBitmapImageRep*)bitmap
+- (BOOL)isCompatibleBitmap:(NSBitmapImageRep *)bitmap
 {
-  NSString *colorSpaceName;
+    NSString *colorSpaceName;
 
-  if ([bitmap bitmapFormat] != 0)
-    {
-      return NO;
+    if ([bitmap bitmapFormat] != 0) {
+        return NO;
     }
 
-  if ([bitmap isPlanar])
-    {
-      return NO;
+    if ([bitmap isPlanar]) {
+        return NO;
     }
 
-  if ([bitmap bitsPerSample] != 8)
-    {
-      return NO;
+    if ([bitmap bitsPerSample] != 8) {
+        return NO;
     }
 
-  // FIXME: Allow more image types as soon as the Opal backend handles them correctly
-  colorSpaceName = [bitmap colorSpaceName];
-  if (![colorSpaceName isEqualToString: NSDeviceRGBColorSpace] &&
-      ![colorSpaceName isEqualToString: NSCalibratedRGBColorSpace])
-    {
-      return NO;
-    }
-  else
-    {
-      return YES;
+    // FIXME: Allow more image types as soon as the Opal backend handles them correctly
+    colorSpaceName = [bitmap colorSpaceName];
+    if (![colorSpaceName isEqualToString:NSDeviceRGBColorSpace] &&
+        ![colorSpaceName isEqualToString:NSCalibratedRGBColorSpace]) {
+        return NO;
+    } else {
+        return YES;
     }
 }
 
-- (void) GSCurrentDevice: (void **)device : (int *)x : (int *)y
+- (void)GSCurrentDevice:(void **)device:(int *)x:(int *)y
 {
-  OpalSurface *surface;
+    OpalSurface *surface;
 
-  [OGSTATE GSCurrentSurface: &surface : x : y];
-  if (device)
-    {
-      *device = [surface device];
+    [OGSTATE GSCurrentSurface:&surface:x:y];
+    if (device) {
+        *device = [surface device];
     }
 }
 
-- (void) GSSetDevice: (void *)device
-                    : (int)x
-                    : (int)y
+- (void)GSSetDevice:(void *)device:(int)x:(int)y
 {
-  OpalSurface *surface;
+    OpalSurface *surface;
 
-  /*
-   * The "graphics port" associated to an OpalContext is necessarily a
-   * CGContextRef supplied by the client to back the OpalContext, instead
-   * of having us create the CGContextRef ourselves.
-   *
-   * Since -graphicsPort is overriden from NSGraphicsContext to compute the
-   * CGContextRef for an OpalSurface (which is not initialized yet), we
-   * get the _graphicsPort ivar directly to obtain the supplied CGContextRef
-   * on initialization, and use that to init our surface.
-   */
-  CGContextRef suppliedContext = self->_graphicsPort;
-  surface = [[OpalSurface alloc] initWithDevice: device
-                                        context: suppliedContext];
-  if (x == -1 && y == -1)
-    {
-      NSSize size = [surface size];
-      x = 0;
-      y = size.height;
+    /*
+     * The "graphics port" associated to an OpalContext is necessarily a
+     * CGContextRef supplied by the client to back the OpalContext, instead
+     * of having us create the CGContextRef ourselves.
+     *
+     * Since -graphicsPort is overriden from NSGraphicsContext to compute the
+     * CGContextRef for an OpalSurface (which is not initialized yet), we
+     * get the _graphicsPort ivar directly to obtain the supplied CGContextRef
+     * on initialization, and use that to init our surface.
+     */
+    CGContextRef suppliedContext = self->_graphicsPort;
+    surface = [[OpalSurface alloc] initWithDevice:device context:suppliedContext];
+    if (x == -1 && y == -1) {
+        NSSize size = [surface size];
+        x = 0;
+        y = size.height;
     }
 
-  [OGSTATE GSSetSurface: surface
-                       : x
-                       : y];
+    [OGSTATE GSSetSurface:surface:x:y];
 
-  [surface release];
+    [surface release];
 }
 
-- (void) DPSgsave
+- (void)DPSgsave
 {
-  [OGSTATE DPSgsave];
-  [super DPSgsave];
+    [OGSTATE DPSgsave];
+    [super DPSgsave];
 }
 
-- (void) DPSgrestore
+- (void)DPSgrestore
 {
-  [super DPSgrestore];
-  [OGSTATE DPSgrestore];
+    [super DPSgrestore];
+    [OGSTATE DPSgrestore];
 }
 
 /** For information about this method, please see description of
     i-var '_opGState' in OpalGState.h.
  **/
-- (void) DPSsetgstate: (int)gstateID
+- (void)DPSsetgstate:(int)gstateID
 {
-  OPGStateRef previousGState = OPContextCopyGState([OGSTATE CGContext]);
-  [OGSTATE setOPGState: previousGState];
-  [previousGState release]; // FIXME
+    OPGStateRef previousGState = OPContextCopyGState([OGSTATE CGContext]);
+    [OGSTATE setOPGState:previousGState];
+    [previousGState release];  // FIXME
 
-  [super DPSsetgstate: gstateID];
+    [super DPSsetgstate:gstateID];
 
-  OPGStateRef newGState = [OGSTATE OPGState];
-  if (newGState)
-    {
-      OPContextSetGState([OGSTATE CGContext], newGState);
-      [OGSTATE setOPGState: nil];
+    OPGStateRef newGState = [OGSTATE OPGState];
+    if (newGState) {
+        OPContextSetGState([OGSTATE CGContext], newGState);
+        [OGSTATE setOPGState:nil];
     }
 }
 
-- (NSInteger) GSDefineGState
+- (NSInteger)GSDefineGState
 {
-  // FIXME
-  return [super GSDefineGState];
+    // FIXME
+    return [super GSDefineGState];
 }
 
-- (void *) graphicsPort
+- (void *)graphicsPort
 {
-  OpalSurface * surface;
+    OpalSurface *surface;
 
-  [OGSTATE GSCurrentSurface: &surface : NULL : NULL];
-  return [surface CGContext];
+    [OGSTATE GSCurrentSurface:&surface:NULL:NULL];
+    return [surface CGContext];
 }
 
 @end

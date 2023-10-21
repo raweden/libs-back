@@ -17,8 +17,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -27,43 +27,41 @@
 
 @implementation CairoPDFSurface
 
-- (id) initWithDevice: (void *)device
+- (id)initWithDevice:(void *)device
 {
-  NSDictionary *info;
-  NSString *path;
+    NSDictionary *info;
+    NSString *path;
 
-  info = (NSDictionary*)device;
-  path = [info objectForKey: @"NSOutputFile"];
+    info = (NSDictionary *)device;
+    path = [info objectForKey:@"NSOutputFile"];
 
-  // FIXME: Hard coded size in points
-  size = NSMakeSize(400, 400);
-  _surface = cairo_pdf_surface_create([path fileSystemRepresentation], 
-                                      size.width, size.height);
-  if (cairo_surface_status(_surface))
-    {
-      DESTROY(self);
+    // FIXME: Hard coded size in points
+    size = NSMakeSize(400, 400);
+    _surface = cairo_pdf_surface_create([path fileSystemRepresentation], size.width, size.height);
+    if (cairo_surface_status(_surface)) {
+        DESTROY(self);
     }
 
-  return self;
+    return self;
 }
 
-- (NSSize) size
+- (NSSize)size
 {
-  return size;
+    return size;
 }
 
-- (void) setSize: (NSSize)newSize
+- (void)setSize:(NSSize)newSize
 {
-  size = newSize;
-  cairo_pdf_surface_set_size(_surface, size.width, size.height);
+    size = newSize;
+    cairo_pdf_surface_set_size(_surface, size.width, size.height);
 }
 
-- (BOOL) isDrawingToScreen
+- (BOOL)isDrawingToScreen
 {
-  return NO;
+    return NO;
 }
 
-- (void) writeComment: (NSString *)comment
+- (void)writeComment:(NSString *)comment
 {
 }
 

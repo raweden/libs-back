@@ -17,8 +17,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -33,15 +33,15 @@
 
 @interface CairoGState : GSGState
 {
-  @public
+    @public
     cairo_t *_ct;
     CairoSurface *_surface;
 }
 
-- (void) GSCurrentSurface: (CairoSurface **)surface : (int *)x : (int *)y;
-- (void) GSSetSurface: (CairoSurface *)surface : (int)x : (int)y;
+- (void)GSCurrentSurface:(CairoSurface **)surface:(int *)x:(int *)y;
+- (void)GSSetSurface:(CairoSurface *)surface:(int)x:(int)y;
 
-- (void) showPage;
+- (void)showPage;
 @end
 
 #endif

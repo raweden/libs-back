@@ -17,8 +17,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -30,23 +30,22 @@
 
 @interface CairoSurface : NSObject
 {
-@public
-  void *gsDevice;
-  cairo_surface_t *_surface;
+    @public
+    void *gsDevice;
+    cairo_surface_t *_surface;
 }
 
-- (id) initWithDevice: (void *)device;
+- (id)initWithDevice:(void *)device;
 
-- (NSSize) size;
-- (void) setSize: (NSSize)newSize;
+- (NSSize)size;
+- (void)setSize:(NSSize)newSize;
 
-- (cairo_surface_t *) surface;
+- (cairo_surface_t *)surface;
 
-- (void) handleExposeRect: (NSRect)rect;
+- (void)handleExposeRect:(NSRect)rect;
 
-- (BOOL) isDrawingToScreen;
+- (BOOL)isDrawingToScreen;
 
 @end
 
 #endif
-

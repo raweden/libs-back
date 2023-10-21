@@ -4,7 +4,7 @@
 
    Written by: Adam Fedor <fedor@gnu.org>
    Date: Sep 2002
-   
+
    This file is part of the GNU Objective C User Interface Library.
 
    This library is free software; you can redistribute it and/or
@@ -19,8 +19,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -31,13 +31,12 @@
 
 @interface GSStreamGState : GSGState
 {
-@public
-  int clinecap, clinejoin;
-  CGFloat clinewidth, cmiterlimit;
-  CGFloat cstrokeadjust;
+    @public
+    int clinecap, clinejoin;
+    CGFloat clinewidth, cmiterlimit;
+    CGFloat cstrokeadjust;
 }
 
 @end
 
 #endif /* _GSStreamGState_h_INCLUDE */
-

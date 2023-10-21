@@ -20,8 +20,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -40,18 +40,16 @@
 	cairo_scaled_font_t *_scaled;
 #endif
 }
-/*
-- (id) initWithFontName: (NSString *)name 
-                 matrix: (const CGFloat *)fmatrix 
-             screenFont: (BOOL)p_screenFont;
-*/
+  /*
+  - (id) initWithFontName: (NSString *)name
+                   matrix: (const CGFloat *)fmatrix
+               screenFont: (BOOL)p_screenFont;
+  */
 #if 0
 - (void) drawGlyphs: (const NSGlyph*)glyphs
 	     length: (int)length 
 	         on: (cairo_t*)ct;
 #endif
-@end
+  @end
 
 #endif
-
-

@@ -1,6 +1,6 @@
 /*
    OpalFontInfo.m
- 
+
    Copyright (C) 2013 Free Software Foundation, Inc.
 
    Author: Ivan Vucica <ivan@vucica.net>
@@ -20,8 +20,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -36,34 +36,33 @@
 #include <cairo-ft.h>
 */
 
-@implementation OpalFontInfo 
+@implementation OpalFontInfo
 
-- (CGFloat) _fontUnitToUserSpace: (CGFloat)fontDimension
+- (CGFloat)_fontUnitToUserSpace:(CGFloat)fontDimension
 {
-  CGFontRef face = [_faceInfo fontFace];
-  CGFloat unitsPerEm = CGFontGetUnitsPerEm(face);
+    CGFontRef face = [_faceInfo fontFace];
+    CGFloat unitsPerEm = CGFontGetUnitsPerEm(face);
 
-  CGFloat pointSize = matrix[0]; // from GSFontInfo
+    CGFloat pointSize = matrix[0];  // from GSFontInfo
 
-  return (fontDimension / unitsPerEm) * pointSize;
+    return (fontDimension / unitsPerEm) * pointSize;
 }
 
-- (BOOL) setupAttributes
+- (BOOL)setupAttributes
 {
-/*
-  cairo_font_extents_t font_extents;
-  cairo_font_face_t *face;
-  cairo_matrix_t font_matrix;
-  cairo_matrix_t ctm;
-  cairo_font_options_t *options;
-*/
-  CGFontRef face;
-  CGSize maximumAdvancementCG;
-  CGRect fontBBoxCG;
+    /*
+      cairo_font_extents_t font_extents;
+      cairo_font_face_t *face;
+      cairo_matrix_t font_matrix;
+      cairo_matrix_t ctm;
+      cairo_font_options_t *options;
+    */
+    CGFontRef face;
+    CGSize maximumAdvancementCG;
+    CGRect fontBBoxCG;
 
-  if (![super setupAttributes])
-    {
-      return NO;
+    if (![super setupAttributes]) {
+        return NO;
     }
 #if 0
   /* setting GSFontInfo:
@@ -74,41 +73,39 @@
   //cairo_matrix_scale(&font_matrix, 0.9, 0.9);
   cairo_matrix_init_identity(&ctm);
 #endif
-  face = [_faceInfo fontFace];
-  if (!face)
-    {
-      return NO;
+    face = [_faceInfo fontFace];
+    if (!face) {
+        return NO;
     }
 
-  ascender = [self _fontUnitToUserSpace: CGFontGetAscent(face)];
-  descender = [self _fontUnitToUserSpace: CGFontGetDescent(face)];
-  xHeight = [self _fontUnitToUserSpace: CGFontGetXHeight(face)];
+    ascender = [self _fontUnitToUserSpace:CGFontGetAscent(face)];
+    descender = [self _fontUnitToUserSpace:CGFontGetDescent(face)];
+    xHeight = [self _fontUnitToUserSpace:CGFontGetXHeight(face)];
 
-  CGFloat pointSize = matrix[0];
+    CGFloat pointSize = matrix[0];
 
-  maximumAdvancementCG = OPFontGetMaximumAdvancement(face);
-  maximumAdvancement = NSMakeSize(maximumAdvancementCG.width * pointSize,
-                                  maximumAdvancementCG.height * pointSize);
-  
-  fontBBoxCG = CGFontGetFontBBox(face);
-  fontBBox = NSMakeRect([self _fontUnitToUserSpace: fontBBoxCG.origin.x],
-			[self _fontUnitToUserSpace: fontBBoxCG.origin.y],
-                        [self _fontUnitToUserSpace: fontBBoxCG.size.width],
-			[self _fontUnitToUserSpace: fontBBoxCG.size.height]);
+    maximumAdvancementCG = OPFontGetMaximumAdvancement(face);
+    maximumAdvancement =
+        NSMakeSize(maximumAdvancementCG.width * pointSize, maximumAdvancementCG.height * pointSize);
 
-  CGFloat leading = [self _fontUnitToUserSpace: CGFontGetLeading(face)];
+    fontBBoxCG = CGFontGetFontBBox(face);
+    fontBBox = NSMakeRect(
+        [self _fontUnitToUserSpace:fontBBoxCG.origin.x], [self _fontUnitToUserSpace:fontBBoxCG.origin.y],
+        [self _fontUnitToUserSpace:fontBBoxCG.size.width], [self _fontUnitToUserSpace:fontBBoxCG.size.height]);
 
-  if (xHeight == 0.0)
-    xHeight = ascender * 0.6;
+    CGFloat leading = [self _fontUnitToUserSpace:CGFontGetLeading(face)];
 
-  // derived from code calculating CGFontGetLeading() value.
-  // we may instead want to extend Opal to include OPFontGetLineHeight(),
-  // containing this code:
-  //   cairo_scaled_font_extents(_scaled, &font_extents);
-  //   lineHeight = font_extents.height
-  // alternatively: line spacing = (ascent + descent + "external leading")
-  // (internal discussion between ivucica and ericwa, 2013-09-17)
-  lineHeight = leading + ascender + descender;
+    if (xHeight == 0.0)
+        xHeight = ascender * 0.6;
+
+    // derived from code calculating CGFontGetLeading() value.
+    // we may instead want to extend Opal to include OPFontGetLineHeight(),
+    // containing this code:
+    //   cairo_scaled_font_extents(_scaled, &font_extents);
+    //   lineHeight = font_extents.height
+    // alternatively: line spacing = (ascent + descent + "external leading")
+    // (internal discussion between ivucica and ericwa, 2013-09-17)
+    lineHeight = leading + ascender + descender;
 
 #if 0
   // Get default font options
@@ -161,41 +158,37 @@
 		fontBBox.size.width, fontBBox.size.height);
 */
 #endif
-  return YES;
+    return YES;
 }
 
-- (id) initWithFontName: (NSString *)name 
-                 matrix: (const CGFloat *)fmatrix 
-             screenFont: (BOOL)p_screenFont
+- (id)initWithFontName:(NSString *)name matrix:(const CGFloat *)fmatrix screenFont:(BOOL)p_screenFont
 {
-  self = [super init];
-  if (!self)
-    return nil;
+    self = [super init];
+    if (!self)
+        return nil;
 
-  _screenFont = p_screenFont;
-  fontName = [name copy];
-  memcpy(matrix, fmatrix, sizeof(matrix));
+    _screenFont = p_screenFont;
+    fontName = [name copy];
+    memcpy(matrix, fmatrix, sizeof(matrix));
 
-  if (_screenFont)
-    {
-      /* Round up; makes the text more legible. */
-      matrix[0] = ceil(matrix[0]);
-      if (matrix[3] < 0.0)
-        matrix[3] = floor(matrix[3]);
-      else
-        matrix[3] = ceil(matrix[3]);
+    if (_screenFont) {
+        /* Round up; makes the text more legible. */
+        matrix[0] = ceil(matrix[0]);
+        if (matrix[3] < 0.0)
+            matrix[3] = floor(matrix[3]);
+        else
+            matrix[3] = ceil(matrix[3]);
     }
 
-  if (![self setupAttributes])
-    {
-      RELEASE(self);
-      return nil;
+    if (![self setupAttributes]) {
+        RELEASE(self);
+        return nil;
     }
 
-  return self;
+    return self;
 }
 
-- (void) dealloc
+- (void)dealloc
 {
 #if 0
   if (_scaled)
@@ -203,15 +196,15 @@
       cairo_scaled_font_destroy(_scaled);
     }
 #endif
-  [super dealloc];
+    [super dealloc];
 }
 
-- (BOOL) glyphIsEncoded: (NSGlyph)glyph
+- (BOOL)glyphIsEncoded:(NSGlyph)glyph
 {
-  CGFontRef face = [_faceInfo fontFace];
-  size_t numGlyphs = CGFontGetNumberOfGlyphs(face);
+    CGFontRef face = [_faceInfo fontFace];
+    size_t numGlyphs = CGFontGetNumberOfGlyphs(face);
 
-  return glyph < numGlyphs;
+    return glyph < numGlyphs;
 }
 #if 0
 static
@@ -241,16 +234,16 @@ BOOL _cairo_extents_for_NSGlyph(cairo_scaled_font_t *scaled_font, NSGlyph glyph,
 }
 #endif
 
-- (NSSize) advancementForGlyph: (NSGlyph)glyph
+- (NSSize)advancementForGlyph:(NSGlyph)glyph
 {
-  CGFontRef face = [_faceInfo fontFace];
-  int advance = 0;
-  CGGlyph cgglyph = glyph;
-  CGFontGetGlyphAdvances(face, &cgglyph, 1, &advance);
+    CGFontRef face = [_faceInfo fontFace];
+    int advance = 0;
+    CGGlyph cgglyph = glyph;
+    CGFontGetGlyphAdvances(face, &cgglyph, 1, &advance);
 
-  CGFloat advanceUserSpace = [self _fontUnitToUserSpace: advance];
+    CGFloat advanceUserSpace = [self _fontUnitToUserSpace:advance];
 
-  return NSMakeSize(advanceUserSpace, 0);
+    return NSMakeSize(advanceUserSpace, 0);
 
 #if 0
   cairo_text_extents_t ctext;
@@ -280,27 +273,27 @@ BOOL _cairo_extents_for_NSGlyph(cairo_scaled_font_t *scaled_font, NSGlyph glyph,
         }
     }
 #endif
-  return NSZeroSize;
+    return NSZeroSize;
 }
 
-- (NSGlyph) glyphForCharacter: (unichar)theChar
+- (NSGlyph)glyphForCharacter:(unichar)theChar
 {
-  CGFontRef face = [_faceInfo fontFace];
+    CGFontRef face = [_faceInfo fontFace];
 
-  CGGlyph result = OPFontGetGlyphWithCharacter(face, theChar);
-  //NSLog(@"%s: Mapped '%@' to glyph # %d", __PRETTY_FUNCTION__, str, (int)result);
-  return result;
+    CGGlyph result = OPFontGetGlyphWithCharacter(face, theChar);
+    // NSLog(@"%s: Mapped '%@' to glyph # %d", __PRETTY_FUNCTION__, str, (int)result);
+    return result;
 }
 
-- (NSGlyph) glyphWithName: (NSString *) glyphName
+- (NSGlyph)glyphWithName:(NSString *)glyphName
 {
-  CGFontRef face = [_faceInfo fontFace];
-  CGGlyph result = CGFontGetGlyphWithGlyphName(face, glyphName);
-  //  NSLog(@"%s: Mapped '%@' to glyph # %d", __PRETTY_FUNCTION__, glyphName, (int)result);
-  return result;
+    CGFontRef face = [_faceInfo fontFace];
+    CGGlyph result = CGFontGetGlyphWithGlyphName(face, glyphName);
+    //  NSLog(@"%s: Mapped '%@' to glyph # %d", __PRETTY_FUNCTION__, glyphName, (int)result);
+    return result;
 }
 
-- (NSRect) boundingRectForGlyph: (NSGlyph)glyph
+- (NSRect)boundingRectForGlyph:(NSGlyph)glyph
 {
 #if 0
   cairo_text_extents_t ctext;
@@ -311,10 +304,10 @@ BOOL _cairo_extents_for_NSGlyph(cairo_scaled_font_t *scaled_font, NSGlyph glyph,
                         ctext.width, ctext.height);
     }
 #endif
-  return NSMakeRect(0,0,10,10);
+    return NSMakeRect(0, 0, 10, 10);
 }
 
-- (CGFloat) widthOfString: (NSString *)string
+- (CGFloat)widthOfString:(NSString *)string
 {
 #if 0
   cairo_text_extents_t ctext;
@@ -330,12 +323,10 @@ BOOL _cairo_extents_for_NSGlyph(cairo_scaled_font_t *scaled_font, NSGlyph glyph,
       return ctext.width;
     }
 #endif
-  return 100.0;
+    return 100.0;
 }
 
-- (void) appendBezierPathWithGlyphs: (NSGlyph *)glyphs 
-                              count: (int)length 
-                       toBezierPath: (NSBezierPath *)path
+- (void)appendBezierPathWithGlyphs:(NSGlyph *)glyphs count:(int)length toBezierPath:(NSBezierPath *)path
 {
 #if 0
   cairo_format_t format = CAIRO_FORMAT_ARGB32;

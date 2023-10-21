@@ -19,8 +19,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -32,91 +32,93 @@
 @interface GSBackend : NSObject
 {
 }
-+ (void) initializeBackend;
++ (void)initializeBackend;
 @end
 
 #if BUILD_SERVER == SERVER_x11
 #include <x11/XGServer.h>
-@interface XGServer (Initialize)
-+ (void) initializeBackend;
+@interface
+XGServer (Initialize)
++ (void)initializeBackend;
 @end
 #elif BUILD_SERVER == SERVER_win32
 #include <win32/WIN32Server.h>
-@interface WIN32Server (Initialize)
-+ (void) initializeBackend;
+@interface
+WIN32Server (Initialize)
++ (void)initializeBackend;
 @end
 #elif BUILD_SERVER == SERVER_wayland
 #include <wayland/WaylandServer.h>
-@interface WaylandServer (Initialize)
-+ (void) initializeBackend;
+@interface
+WaylandServer (Initialize)
++ (void)initializeBackend;
 @end
 #elif BUILD_SERVER == SERVER_wasm_cairo
 #include <wasm-cairo/WasmCairoDisplayServer.h>
-@interface WasmCairoDisplayServer (Initialize)
-+ (void) initializeBackend;
+@interface
+WasmCairoDisplayServer (Initialize)
++ (void)initializeBackend;
 @end
 #endif
+
+
 
 /* Call the correct initalization routines for the choosen
    backend. This depends both on configuration data and defaults.
 */
 @implementation GSBackend
 
-+ (void) initializeBackend
++ (void)initializeBackend
 {
-  Class           contextClass;
-  NSString       *context = nil;
-  NSUserDefaults *defs = [NSUserDefaults standardUserDefaults];
+    Class contextClass;
+    NSString *context = nil;
+    NSUserDefaults *defs = [NSUserDefaults standardUserDefaults];
 
-  /* Load in only one server */
+    /* Load in only one server */
 #if BUILD_SERVER == SERVER_x11
-  [XGServer initializeBackend];
+    [XGServer initializeBackend];
 #elif BUILD_SERVER == SERVER_win32
-  [WIN32Server initializeBackend];
+    [WIN32Server initializeBackend];
 #elif BUILD_SERVER == SERVER_wayland
-  [WaylandServer initializeBackend];
-#elif (BUILD_SERVER==SERVER_wasm_cairo)
-  [WasmCairoDisplayServer initializeBackend];
+    [WaylandServer initializeBackend];
+#elif (BUILD_SERVER == SERVER_wasm_cairo)
+    [WasmCairoDisplayServer initializeBackend];
 #else
-  [NSException raise: NSInternalInconsistencyException format: @"No Window Server configured in backend"];
+    [NSException raise:NSInternalInconsistencyException format:@"No Window Server configured in backend"];
 #endif
 
-  /* The way the frontend is currently structured
-     it's not possible to have more than one */
+    /* The way the frontend is currently structured
+       it's not possible to have more than one */
 
-  /* What backend context? */
-  if ([defs stringForKey: @"GSContext"])
-    context = [defs stringForKey: @"GSContext"];
-  
-  if ((context == nil) || ([context length] == 0))
-    {
-#if (BUILD_GRAPHICS==GRAPHICS_xdps)
-    context = @"NSDPSContext";
-#elif (BUILD_GRAPHICS==GRAPHICS_art)
-    context = @"ARTContext";
-#elif (BUILD_GRAPHICS==GRAPHICS_xlib)
-    context = @"XGContext";
-#elif (BUILD_GRAPHICS==GRAPHICS_winlib)
-    context = @"WIN32Context";
-#elif (BUILD_GRAPHICS==GRAPHICS_cairo)
-    context = @"CairoContext";
-#elif (BUILD_GRAPHICS==GRAPHICS_opal)
-    context = @"OpalContext";
+    /* What backend context? */
+    if ([defs stringForKey:@"GSContext"])
+        context = [defs stringForKey:@"GSContext"];
+
+    if ((context == nil) || ([context length] == 0)) {
+#if (BUILD_GRAPHICS == GRAPHICS_xdps)
+        context = @"NSDPSContext";
+#elif (BUILD_GRAPHICS == GRAPHICS_art)
+        context = @"ARTContext";
+#elif (BUILD_GRAPHICS == GRAPHICS_xlib)
+        context = @"XGContext";
+#elif (BUILD_GRAPHICS == GRAPHICS_winlib)
+        context = @"WIN32Context";
+#elif (BUILD_GRAPHICS == GRAPHICS_cairo)
+        context = @"CairoContext";
+#elif (BUILD_GRAPHICS == GRAPHICS_opal)
+        context = @"OpalContext";
 #else
 #error INVALID build graphics type
 #endif
     }
-    
-  // Reference the requested build time class...
-  contextClass = NSClassFromString(context);
-  if (contextClass == nil)
-    {
-      NSLog(@"%s:Backend context class missing for: %@\n", __PRETTY_FUNCTION__, context);
-      exit(1);
+
+    // Reference the requested build time class...
+    contextClass = NSClassFromString(context);
+    if (contextClass == nil) {
+        NSLog(@"%s:Backend context class missing for: %@\n", __PRETTY_FUNCTION__, context);
+        exit(1);
     }
-  [contextClass initializeBackend];
+    [contextClass initializeBackend];
 }
 
 @end
-
-

@@ -6,7 +6,7 @@
 
    Written By: Adam Fedor <fedor@gnu.org>
    Date: Mar 2002
-   
+
    This file is part of the GNU Objective C User Interface library.
 
    This library is free software; you can redistribute it and/or
@@ -21,8 +21,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; see the file COPYING.LIB.
-   If not, see <http://www.gnu.org/licenses/> or write to the 
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+   If not, see <http://www.gnu.org/licenses/> or write to the
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA.
 */
 
@@ -37,22 +37,20 @@
 
 @interface GSContext : NSGraphicsContext
 {
-@public
-  GSDisplayServer       *server;
-  void			*opstack;
-  void			*gstack;
-  GSGState		*gstate;
+    @public
+    GSDisplayServer *server;
+    void *opstack;
+    void *gstack;
+    GSGState *gstate;
 }
 
-- (GSGState *) currentGState;
+- (GSGState *)currentGState;
 
 @end
 
 /* Error Macros */
-#define DPS_WARN(type, resp)		\
-    NSDebugLLog(@"GSContext", type, resp)
-#define DPS_ERROR(type, resp)		\
-    NSLog(type, resp)
+#define DPS_WARN(type, resp) NSDebugLLog(@"GSContext", type, resp)
+#define DPS_ERROR(type, resp) NSLog(type, resp)
 
 /* Current keys used for the info dictionary:
        Key:           Value:
@@ -84,4 +82,3 @@ extern NSString *DPSundefinedresult;
 extern NSString *DPSVMerror;
 
 #endif /* _GSContext_h_INCLUDE */
-
