@@ -50,6 +50,11 @@
 @interface WaylandServer (Initialize)
 + (void) initializeBackend;
 @end
+#elif BUILD_SERVER == SERVER_wasm_cairo
+#include <wasm-cairo/WasmCairoDisplayServer.h>
+@interface WasmCairoDisplayServer (Initialize)
++ (void) initializeBackend;
+@end
 #endif
 
 /* Call the correct initalization routines for the choosen
@@ -70,9 +75,10 @@
   [WIN32Server initializeBackend];
 #elif BUILD_SERVER == SERVER_wayland
   [WaylandServer initializeBackend];
+#elif (BUILD_SERVER==SERVER_wasm_cairo)
+  [WasmCairoDisplayServer initializeBackend];
 #else
-  [NSException raise: NSInternalInconsistencyException
-	       format: @"No Window Server configured in backend"];
+  [NSException raise: NSInternalInconsistencyException format: @"No Window Server configured in backend"];
 #endif
 
   /* The way the frontend is currently structured

@@ -71,13 +71,14 @@
 #    include "cairo/Win32CairoSurface.h"
 #  endif /* USE_GLITZ */
 #elif BUILD_SERVER == SERVER_wayland
-#  include "wayland/WaylandServer.h"
-#  include "cairo/CairoGState.h"
-#  include "cairo/WaylandCairoShmSurface.h"
-#  define _CAIRO_GSTATE_CLASSNAME CairoGState
-#  define _CAIRO_SURFACE_CLASSNAME WaylandCairoShmSurface
+#elif BUILD_SERVER == SERVER_wasm_cairo
+#include "wasm-cairo/WasmCairoDisplayServer.h"
+#include "cairo/CairoGState.h"
+#include "wasm-cairo/WasmCairoIOSurface.h"
+#define _CAIRO_GSTATE_CLASSNAME CairoGState
+#define _CAIRO_SURFACE_CLASSNAME WasmCairoIOSurface
 #else
-#  error Invalid server for Cairo backend : non implemented
+#error Invalid server for Cairo backend : non implemented
 #endif /* BUILD_SERVER */
 
 @implementation CairoContext

@@ -207,7 +207,11 @@ NSMutableDictionary *pasteboards = nil;
 
 - (NSString*) description
 {
+#ifndef __WASM_NOVARG
     return [NSString stringWithFormat: @"%@ %p for type '%@' in %@", [super description], data, type, entry];
+#else
+    return NSStringWithFormat(@"%@ %p for type '%@' in %@", [super description], data, type, entry);
+#endif
 }
 
 - (NSData*) data
@@ -224,6 +228,7 @@ NSMutableDictionary *pasteboards = nil;
         NSLog(@"-dataWithversion:%d for %@", version, self);
     }
 
+#ifndef __WASM_EMCC_OBJC
     // If the owner of this item is an X window - we can't use the data from
     // the last time the selection was accessed because the X window may have
     // changed it's selection without telling us - isn't X wonderful :-(
@@ -231,6 +236,7 @@ NSMutableDictionary *pasteboards = nil;
     if (data != nil && owner != nil && [owner isProxy] == NO && [owner isKindOfClass: xPbClass] == YES) {
         DESTROY(data);
     }
+#endif
 
     if (data == nil && (owner && pboard)) {
         
@@ -397,7 +403,11 @@ NSMutableDictionary *pasteboards = nil;
 
 - (NSString*) description
 {
+#ifndef __WASM_NOVARG
     return [NSString stringWithFormat: @"%@ ref %d on %@ owned by %@", [super description], refNum, pboard, owner];
+#else
+    return NSStringWithFormat(@"%@ ref %d on %@ owned by %@", [super description], refNum, pboard, owner);
+#endif
 }
 
 - (PasteboardData*) itemForType: (NSString*)type
@@ -536,7 +546,11 @@ NSMutableDictionary *pasteboards = nil;
     [dictionary_lock lock];
 #endif
     while (aName == nil) {
+#ifndef __WASM_NOVARG
         aName = [NSString stringWithFormat: @"%dlocalName", number++];
+#else 
+        aName = NSStringWithFormat(@"%dlocalName", number++);
+#endif
         if ([pasteboards objectForKey: aName] == nil) {
             break;  // This name is unique.
         } else {
@@ -571,16 +585,20 @@ NSMutableDictionary *pasteboards = nil;
     }
 
     if (e) {
+#ifndef __WASM_EMCC_OBJC
         id  x = [xPbClass ownerByOsPb: name];
+#endif
 
         [e addTypes: types owner: owner pasteboard: pb];
 
+#ifndef __WASM_EMCC_OBJC
         // If there is an X pasteboard corresponding to this pasteboard, and the
         // X system doesn't currently own the pasteboard, we must inform it of
         // the change in the types of data supplied by this pasteboard.
         // We do this by simulating a change of pasteboard ownership.
         if (x != owner && x != nil)
             [x pasteboardChangedOwner: pb];
+#endif
         
         return count;
     }
@@ -719,7 +737,11 @@ NSMutableDictionary *pasteboards = nil;
 
 - (NSString*) description
 {
+#ifndef __WASM_NOVARG
     return [NSString stringWithFormat: @"%@ %@", [super description], name];
+#else
+    return NSStringWithFormat(@"%@ %@", [super description], name);
+#endif
 }
 
 - (PasteboardEntry*) entryByCount: (int)count
@@ -921,10 +943,11 @@ NSMutableDictionary *pasteboards = nil;
         [permenant addObject: [self pasteboardWithName: NSRulerPboard]];
         [permenant addObject: [self pasteboardWithName: NSFindPboard]];
 
+#ifndef __WASM_EMCC_OBJC
         // Ensure that the OS pasteboard system is initialised.
 #if defined(__WIN32__) || defined(__CYGWIN__)
         xPbClass = NSClassFromString(@"Win32PbOwner");
-#else      
+#else
         xPbClass = NSClassFromString(@"XPbOwner");
 #endif
 
@@ -934,6 +957,7 @@ NSMutableDictionary *pasteboards = nil;
         // +initializePasteboard will already have printed a warning in this case.
         if (xPbClass && ![xPbClass initializePasteboard])
             xPbClass = nil;
+#endif
     }
 
     return self;
@@ -1080,7 +1104,6 @@ static void init(int argc, char** argv, char **env)
             DESTROY(t);
         }
         NS_HANDLER
-        
         {
             gpbs_log(LOG_CRIT, [[localException description] UTF8String]);
             DESTROY(t);
@@ -1091,7 +1114,7 @@ static void init(int argc, char** argv, char **env)
 
     // Make gpbs logging go to syslog unless overridden by user.
     defs = [NSUserDefaults standardUserDefaults];
-    [defs registerDefaults: [NSDictionary dictionaryWithObjectsAndKeys:@"YES", @"GSLogSyslog", nil]];
+    [defs setObject: @"YES" forKey: @"GSLogSyslog"];
 }
 
 
@@ -1185,10 +1208,8 @@ int main(int argc, char** argv, char **env)
  * in the source where the '@protocol()' directive is used.
  */
 @interface NSPasteboardOwnerDummy : NSObject <GSPasteboardCallback>
-- (void) pasteboard: (NSPasteboard*)pb
- provideDataForType: (NSString*)type;
-- (void) pasteboard: (NSPasteboard*)pb
- provideDataForType: (NSString*)type andVersion:(int)v;
+- (void) pasteboard: (NSPasteboard*)pb provideDataForType: (NSString*)type;
+- (void) pasteboard: (NSPasteboard*)pb provideDataForType: (NSString*)type andVersion:(int)v;
 - (void) pasteboardChangedOwner: (NSPasteboard*)pb;
 @end
 

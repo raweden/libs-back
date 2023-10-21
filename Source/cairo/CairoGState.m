@@ -870,6 +870,7 @@ static inline cairo_filter_t cairoFilterFromNSImageInterpolation(NSImageInterpol
 
   if (!baseDict)
     {
+#ifndef __WASM_NOVARG
         baseDict = [[NSDictionary dictionaryWithObjectsAndKeys:
                                     NSDeviceRGBColorSpace, @"ColorSpace",
                                     [NSNumber numberWithUnsignedInt: 8], @"BitsPerSample",
@@ -878,6 +879,16 @@ static inline cairo_filter_t cairoFilterFromNSImageInterpolation(NSImageInterpol
                                     [NSNumber numberWithUnsignedInt: 1], @"HasAlpha",
                                     nil]
                             retain];
+#else
+        baseDict = @{
+          @"ColorSpace": NSDeviceRGBColorSpace,
+          @"BitsPerSample": [NSNumber numberWithUnsignedInt: 8],
+          @"Depth": [NSNumber numberWithUnsignedInt: 32],
+          @"SamplesPerPixel": [NSNumber numberWithUnsignedInt: 4],
+          @"HasAlpha": [NSNumber numberWithUnsignedInt: 1]
+        };
+        [baseDict retain];
+#endif
     }
     
   dict = [NSMutableDictionary dictionaryWithDictionary: baseDict];

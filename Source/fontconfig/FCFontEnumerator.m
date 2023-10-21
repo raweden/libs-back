@@ -167,12 +167,30 @@ static NSArray *faFromFc(FcPattern *pat)
 #ifdef FC_POSTSCRIPT_NAME
   char *fcname;
 #endif
+  /*
+  FcResult res = FcPatternGetString(pat, FC_FAMILY, 0, (FcChar8**)&fcfamily);
+
+  // Temporary fix for the limited set of fonts in test, fontconfig seams to fail to provide
+  // the FC_FAMILY for every font, but its not wort fixing if cairo backend is not functional.
+  if (res != FcResultMatch) {
+    char *f_name;
+    FcResult res2 = FcPatternGetString(pat, FC_FULLNAME, 0, (FcChar8**)&f_name);
+    if (res2 == FcResultMatch) {
+      char *tmp = fc_bug_familyFallback(f_name);
+      if (tmp != NULL) {
+        fcfamily = tmp;
+      } else {
+        fprintf(stderr, "could not get FC_FULLNAME\n");
+        return nil;
+      }
+    }
+  }*/
 
   if (FcPatternGetInteger(pat, FC_WEIGHT, 0, &weight) != FcResultMatch
-    || FcPatternGetInteger(pat, FC_SLANT,  0, &slant) != FcResultMatch
-    || FcPatternGetString(pat, FC_FAMILY, 0, (FcChar8 **)&fcfamily)
-      != FcResultMatch)
+    || FcPatternGetInteger(pat, FC_SLANT,  0, &slant) != FcResultMatch 
+    || FcPatternGetString(pat, FC_FAMILY, 0, (FcChar8 **)&fcfamily) != FcResultMatch) {
     return nil;
+  }
 
   if (FcPatternGetInteger(pat, FC_SPACING, 0, &spacing) == FcResultMatch)
     if (spacing==FC_MONO || spacing==FC_CHARCELL)
@@ -322,12 +340,8 @@ static NSArray *faFromFc(FcPattern *pat)
   if (FcPatternGetString(pat, FC_STYLE, 0, (FcChar8 **)&fcstyle) == FcResultMatch)
     style = [NSString stringWithUTF8String: fcstyle];
 
-//  NSLog (@"family: %@, style: %s/%@", name, fcstyle, style);
-  return [NSArray arrayWithObjects: name, 
-		  style, 
-		  [NSNumber numberWithFloat: nsweight],
-		  [NSNumber numberWithUnsignedInt: nstraits],
-		  nil];
+  //  NSLog (@"family: %@, style: %s/%@", name, fcstyle, style);  
+  return @[name, style,  [NSNumber numberWithFloat: nsweight], [NSNumber numberWithUnsignedInt: nstraits]];
 }
 
 - (void) enumerateFontsAndFamilies
@@ -338,33 +352,60 @@ static NSArray *faFromFc(FcPattern *pat)
   NSMutableArray *fcxft_allFontNames = [NSMutableArray new];
   Class faceInfoClass = [[self class] faceInfoClass];
 
+  FcConfig *config = FcInitLoadConfigAndFonts();
   FcPattern *pat = FcPatternCreate();
-  FcObjectSet *os = FcObjectSetBuild(FC_FAMILY, FC_STYLE, FC_FULLNAME,
+  FcObjectSet *os = FcObjectSetCreate();
+  FcObjectSetAdd(os, FC_FAMILY);
+  FcObjectSetAdd(os, FC_STYLE);
+  FcObjectSetAdd(os, FC_FULLNAME);
 #ifdef FC_POSTSCRIPT_NAME
-                                     FC_POSTSCRIPT_NAME,
+  FcObjectSetAdd(os, FC_POSTSCRIPT_NAME);
 #endif
-                                     FC_SLANT, FC_WEIGHT, FC_WIDTH,
-                                     FC_SPACING, NULL);
-  FcFontSet *fs = FcFontList(NULL, pat, os);
+  FcObjectSetAdd(os, FC_SLANT);
+  FcObjectSetAdd(os, FC_WEIGHT);
+  FcObjectSetAdd(os, FC_WIDTH);
+  FcObjectSetAdd(os, FC_SPACING);
+  FcFontSet *fs = FcFontList(config, pat, os);
 
-  FcPatternDestroy(pat);
-  FcObjectSetDestroy(os);
+  //fprintf(stderr, "Did enter at %s font count %d\n", __PRETTY_FUNCTION__, fs->nfont);
+  // https://github.com/prepare/xetex/blob/b7ef352d2c0dd164f339eaf3d522cc752bb185c4/source/texk/web2c/xetexdir/XeTeXFontMgr_FC.cpp
 
-  for (i = 0; i < fs->nfont; i++)
-    {
+  int cnt_a = 0;
+  int cnt_b = 0;
+
+  for (i = 0; i < fs->nfont; i++) {
+
+      FcPattern* font = fs->fonts[i];
       char *family;
 
-      if (FcPatternGetString(fs->fonts[i], FC_FAMILY, 0, (FcChar8 **)&family)
-          == FcResultMatch)
-        {
-          NSArray *fontArray;
+      FcResult res = FcPatternGetString(font, FC_FAMILY, 0, (FcChar8**)&family);
+      /*
+      // Temporary fix for the limited set of fonts in test, fontconfig seams to fail to provide
+      // the FC_FAMILY for every font, but its not wort fixing if cairo backend is not functional.
+      if (res != FcResultMatch) {
+        char *f_name;
+        FcResult res2 = FcPatternGetString(font, FC_FULLNAME, 0, (FcChar8**)&f_name);
+        if (res2 == FcResultMatch) {
+          char *tmp = fc_bug_familyFallback(f_name);
+          if (tmp != NULL) {
+            family = tmp;
+            fallback = YES;
+          }
+        }
+      }*/
+      if (res == FcResultMatch) {
 
-          if ((fontArray = faFromFc(fs->fonts[i])))
+          NSArray *fontArray;
+          
+
+          fontArray = faFromFc(fs->fonts[i]);
+          if (fontArray != nil)
             {
+              cnt_a++;
               NSString *name = [fontArray objectAtIndex: 0];
 
-              if (![fcxft_allFontNames containsObject: name])
-                {
+              if (![fcxft_allFontNames containsObject: name]) {
+                  cnt_b++;
                   NSString *familyString;
                   NSMutableArray *familyArray;
                   FCFaceInfo *aFont;
@@ -380,7 +421,6 @@ static NSArray *faFromFc(FcPattern *pat)
                                                 forKey: familyString];
                       RELEASE(familyArray);
                     }
-
                   NSDebugLLog(@"NSFont", @"fc enumerator: adding font: %@", name);
                   [familyArray addObject: fontArray];
                   [fcxft_allFontNames addObject: name];
@@ -394,12 +434,27 @@ static NSArray *faFromFc(FcPattern *pat)
             }
         }
     }
-  FcFontSetDestroy (fs); 
+
+  FcPatternDestroy(pat);
+  FcObjectSetDestroy(os);
+  FcFontSetDestroy (fs);
+
+  //fprintf(stderr, "total NCFontEnumerator count is %lu; %d fonts in 1. step %d fonts in 2. step   \n", [fcxft_allFonts count], cnt_a, cnt_b);
 
   allFontNames = fcxft_allFontNames;
+  RETAIN(allFontNames);
   allFontFamilies = fcxft_allFontFamilies;
+  RETAIN(allFontFamilies);
   __allFonts = fcxft_allFonts;
+  RETAIN(__allFonts);
 
+  /*{
+    NSEnumerator *e= [fcxft_allFonts objectEnumerator];
+    NSString *name;
+    while (name = (NSString*)[e nextObject]) {
+      fprintf(stderr, "'%s'\n", [name cString]);
+    }
+  }*/
   // Sort font families
   {
     NSComparisonResult (*fontSort)(id, id, void *) = sortFontFacesArray;
@@ -435,6 +490,7 @@ static NSArray *faFromFc(FcPattern *pat)
     {
       return @"ArialMT";
     }
+    fprintf(stderr, "could not find any of the specified fonts for %s defaulting to Helvetica\n", __PRETTY_FUNCTION__);
   return @"Helvetica";
 }
 
@@ -460,6 +516,7 @@ static NSArray *faFromFc(FcPattern *pat)
     {
       return @"Arial-BoldMT";
     }
+  fprintf(stderr, "could not find any of the specified fonts for %s defaulting to Helvetica\n", __PRETTY_FUNCTION__);
   return @"Helvetica-Bold";
 }
 
@@ -481,6 +538,7 @@ static NSArray *faFromFc(FcPattern *pat)
     {
       return @"CourierNewPSMT";
     }
+  fprintf(stderr, "could not find any of the specified fonts for %s defaulting to Helvetica\n", __PRETTY_FUNCTION__);
   return @"Courier";
 }
 
